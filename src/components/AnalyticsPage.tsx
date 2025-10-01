@@ -49,32 +49,33 @@ export function AnalyticsPage() {
 
   return (
     <div className="space-y-6" data-testid="analytics-page">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold" data-testid="text-analytics-title">Analytics</h1>
-        <div className="flex gap-2">
-          <Button
-            variant={view === "progress" ? "default" : "outline"}
-            onClick={() => setView("progress")}
-            data-testid="button-view-progress"
-          >
-            <BarChart3 className="mr-1 h-4 w-4" /> Progresso
-          </Button>
-          <Button
-            variant={view === "difficulty" ? "default" : "outline"}
-            onClick={() => setView("difficulty")}
-            data-testid="button-view-difficulty"
-          >
-            <Target className="mr-1 h-4 w-4" /> Dificuldades
-          </Button>
-          <Button
-            variant={view === "time" ? "default" : "outline"}
-            onClick={() => setView("time")}
-            data-testid="button-view-time"
-          >
-            <Timer className="mr-1 h-4 w-4" /> Tempo
-          </Button>
-        </div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <h1 className="text-3xl font-bold" data-testid="text-analytics-title">Analytics</h1>
+       <div className="flex flex-wrap gap-2">
+        <Button
+          variant={view === "progress" ? "default" : "outline"}
+          onClick={() => setView("progress")}
+          data-testid="button-view-progress"
+        >
+          <BarChart3 className="mr-1 h-4 w-4" /> Progresso
+        </Button>
+        <Button
+          variant={view === "difficulty" ? "default" : "outline"}
+          onClick={() => setView("difficulty")}
+          data-testid="button-view-difficulty"
+        >
+          <Target className="mr-1 h-4 w-4" /> Dificuldades
+        </Button>
+        <Button
+          variant={view === "time" ? "default" : "outline"}
+          onClick={() => setView("time")}
+          data-testid="button-view-time"
+        >
+          <Timer className="mr-1 h-4 w-4" /> Tempo
+        </Button>
       </div>
+    </div>
+
 
       {view === "progress" && progressData && (
         <div className="space-y-6">

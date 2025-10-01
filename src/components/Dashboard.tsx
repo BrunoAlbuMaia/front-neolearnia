@@ -6,14 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { useToast } from "../hooks/use-toast";
 import { apiRequest } from "../lib/queryClient";
 import { type Flashcard, type FlashcardSet, type DeckWithStats } from "../../shared/schema";
-import FlashcardPreview from "./FlashcardPreview";
-import { 
-  // ... seus outros imports
-  LogOut // Importe o ícone de logout para substituir o <i>
-} from "lucide-react";
 
-import { ThemeToggle } from "./ThemeToggle";
-import { Brain, ClipboardType, Wand2, Trash2, Clock, Loader2, BarChart3, BookOpen, Plus, Play } from "lucide-react";
+import { ClipboardType, Wand2, Trash2, Clock, Loader2, BookOpen, Play } from "lucide-react";
 import Navbar from "./ui/navbar";
 
 interface DashboardProps {

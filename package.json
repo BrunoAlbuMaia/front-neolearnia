@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -23,6 +23,7 @@
     "drizzle-orm": "^0.44.5",
     "drizzle-zod": "^0.8.3",
     "firebase": "^12.3.0",
+    "firebase-admin": "^13.5.0",
     "lucide-react": "^0.544.0",
     "path": "^0.12.7",
     "react": "^19.1.1",

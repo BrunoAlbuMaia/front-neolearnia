@@ -2,7 +2,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, type User } from "firebase/auth";
 
 // Check if we should use mock auth mode (for development)
-const useMockAuth = import.meta.env.VITE_AUTH_MODE === 'mock' || import.meta.env.DEV === true;
+const useMockAuth = import.meta.env.VITE_AUTH_MODE === 'mock' || import.meta.env.DEV === false;
 
 // Check if we have real Firebase config
 const hasFirebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY && 
