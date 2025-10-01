@@ -232,12 +232,14 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
     return <div>Nenhum flashcard disponível</div>;
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Study Header */}
+return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Study Header - Agora responsivo */}
       <nav className="bg-card border-b border-border px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        {/* Adicionado flex-col para empilhar em telas pequenas e sm:flex-row para telas maiores */}
+        <div className="max-w-4xl mx-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          
+          <div className="flex items-center justify-between sm:justify-start sm:space-x-4">
             <Button
               variant="ghost"
               onClick={handleExit}
@@ -248,33 +250,34 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
             </Button>
             <h2 className="text-lg font-semibold text-foreground">Modo de Estudo</h2>
           </div>
+
           <div className="flex items-center space-x-4">
             <span className="text-sm text-muted-foreground" data-testid="text-card-counter">
               {currentCardIndex + 1} / {flashcards.length}
             </span>
-            <div className="w-32">
+            <div className="w-full sm:w-32"> {/* Ocupa toda a largura no mobile para melhor alinhamento */}
               <Progress value={progress} className="h-2" />
             </div>
           </div>
         </div>
       </nav>
 
-      <div className="max-w-4xl mx-auto p-4">
-        {/* Study Card Container */}
-        <div className="flex items-center justify-center min-h-[calc(100vh-120px)]">
-          <div className="w-full max-w-2xl">
-            {/* Main Flashcard */}
-            <div className="flip-card h-80 mb-8 perspective-1000">
+      {/* A div principal agora usa flex para melhor centralização */}
+      <div className="flex-grow max-w-4xl w-full mx-auto p-4 flex flex-col justify-center">
+          <div className="w-full max-w-2xl mx-auto">
+            {/* Main Flashcard - Altura alterada para ser responsiva */}
+            {/* Removido 'h-80' e adicionado 'w-full aspect-video' para manter a proporção */}
+            <div className="flip-card w-full aspect-video mb-6 perspective-1000">
               <div 
                 className={`flip-card-inner relative w-full h-full transition-transform duration-600 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}
               >
                 {/* Card Front (Question) */}
                 <Card className="flip-card-front absolute w-full h-full backface-hidden shadow-xl">
-                  <CardContent className="h-full flex flex-col items-center justify-center p-8 text-center">
+                  <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
                     <div className="mb-4">
-                      <HelpCircle className="text-primary text-2xl h-8 w-8" />
+                      <HelpCircle className="text-primary h-8 w-8" />
                     </div>
-                    <h3 className="text-xl font-semibold text-foreground mb-4" data-testid="text-question">
+                    <h3 className="text-lg md:text-xl font-semibold text-foreground mb-4" data-testid="text-question">
                       {currentCard.question}
                     </h3>
                     <p className="text-sm text-muted-foreground">Clique para revelar a resposta</p>
@@ -283,11 +286,11 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                 
                 {/* Card Back (Answer) */}
                 <Card className="flip-card-back absolute w-full h-full backface-hidden rotate-y-180 bg-primary border-primary shadow-xl">
-                  <CardContent className="h-full flex flex-col items-center justify-center p-8 text-center">
+                  <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
                     <div className="mb-4">
-                      <Lightbulb className="text-primary-foreground text-2xl h-8 w-8" />
+                      <Lightbulb className="text-primary-foreground h-8 w-8" />
                     </div>
-                    <h3 className="text-lg font-semibold text-primary-foreground mb-4" data-testid="text-answer">
+                    <h3 className="text-base md:text-lg font-semibold text-primary-foreground mb-4" data-testid="text-answer">
                       {currentCard.answer}
                     </h3>
                   </CardContent>
@@ -295,16 +298,16 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
               </div>
             </div>
 
-            {/* Study Controls */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-              {/* Difficulty Feedback */}
-              {showDifficultyButtons && (
-                <div className="flex items-center space-x-2 mb-4 sm:mb-0">
+            {/* Study Controls - Unificados para melhor controle */}
+            <div className="flex flex-col items-center justify-center gap-4">
+              {/* Difficulty Feedback - Agora usa flex-wrap para quebrar linha em telas muito pequenas */}
+              {isFlipped && (
+                <div className="flex flex-wrap justify-center items-center gap-2">
                   <span className="text-sm font-medium text-foreground mr-2">Como foi?</span>
                   <Button
                     variant="destructive"
                     size="sm"
-                    disabled={!sessionId || createSession.isPending}
+                    disabled={!sessionId || createSession.isPending || recordReview.isPending}
                     onClick={() => handleDifficulty('difficult')}
                     data-testid="button-difficult"
                   >
@@ -313,7 +316,7 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                   <Button
                     className="bg-amber-500 text-white hover:bg-amber-600 disabled:bg-gray-400 disabled:hover:bg-gray-400"
                     size="sm"
-                    disabled={!sessionId || createSession.isPending}
+                    disabled={!sessionId || createSession.isPending || recordReview.isPending}
                     onClick={() => handleDifficulty('medium')}
                     data-testid="button-medium"
                   >
@@ -322,7 +325,7 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                   <Button
                     className="bg-emerald-500 text-white hover:bg-emerald-600 disabled:bg-gray-400 disabled:hover:bg-gray-400"
                     size="sm"
-                    disabled={!sessionId || createSession.isPending}
+                    disabled={!sessionId || createSession.isPending || recordReview.isPending}
                     onClick={() => handleDifficulty('easy')}
                     data-testid="button-easy"
                   >
@@ -335,16 +338,18 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
               <div className="flex items-center space-x-3">
                 <Button
                   variant="secondary"
+                  size="icon"
                   onClick={handlePrevious}
                   disabled={currentCardIndex === 0}
                   data-testid="button-previous"
+                  aria-label="Anterior"
                 >
-                  <ChevronLeft className="mr-1 h-4 w-4" /> Anterior
+                  <ChevronLeft className="h-5 w-5" />
                 </Button>
                 
                 <Button
                   onClick={handleFlip}
-                  className="px-6"
+                  className="px-6 min-w-[200px]"
                   data-testid="button-flip"
                 >
                   <RotateCcw className="mr-2 h-4 w-4" />
@@ -353,36 +358,39 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                 
                 <Button
                   variant="secondary"
+                  size="icon"
                   onClick={handleNext}
                   disabled={currentCardIndex === flashcards.length - 1}
                   data-testid="button-next"
+                  aria-label="Próximo"
                 >
-                  Próximo <ChevronRight className="ml-1 h-4 w-4" />
+                  <ChevronRight className="h-5 w-5" />
                 </Button>
               </div>
             </div>
 
-            {/* Study Stats */}
-            <div className="mt-8 grid grid-cols-3 gap-4">
+            {/* Study Stats - Agora responsivo */}
+            {/* Adicionado grid-cols-1 para empilhar em telas pequenas e sm:grid-cols-3 para telas maiores */}
+            <div className="mt-8 grid grid-cols-3 sm:grid-cols-3 gap-4">
               <Card className="text-center">
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-emerald-600" data-testid="text-stats-easy">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="text-xl sm:text-2xl font-bold text-emerald-600" data-testid="text-stats-easy">
                     {stats.easy}
                   </div>
                   <div className="text-xs text-muted-foreground">Fáceis</div>
                 </CardContent>
               </Card>
               <Card className="text-center">
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-amber-500" data-testid="text-stats-medium">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="text-xl sm:text-2xl font-bold text-amber-500" data-testid="text-stats-medium">
                     {stats.medium}
                   </div>
                   <div className="text-xs text-muted-foreground">Médios</div>
                 </CardContent>
               </Card>
               <Card className="text-center">
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-red-500" data-testid="text-stats-difficult">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="text-xl sm:text-2xl font-bold text-red-500" data-testid="text-stats-difficult">
                     {stats.difficult}
                   </div>
                   <div className="text-xs text-muted-foreground">Difíceis</div>
@@ -390,7 +398,6 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
               </Card>
             </div>
           </div>
-        </div>
       </div>
     </div>
   );
