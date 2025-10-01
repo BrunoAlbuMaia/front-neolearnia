@@ -1,7 +1,7 @@
 // src/components/Navbar.tsx
 
-import { Button } from "./ui/button"; // Certifique-se que o caminho para seus componentes ui está correto
-import { ThemeToggle } from "./ThemeToggle"; // E para o ThemeToggle também
+import { Button } from "./button"; // Certifique-se que o caminho para seus componentes ui está correto
+import { ThemeToggle } from "../ThemeToggle"; // E para o ThemeToggle também
 import { Brain, BarChart3, LogOut } from "lucide-react";
 
 interface NavbarProps {
