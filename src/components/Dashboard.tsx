@@ -10,7 +10,7 @@ import { apiRequest } from "../lib/queryClient";
 import { type Flashcard, type FlashcardSet } from "../../shared/schema";
 import PdfPreviewer from "./ui/pdfPreviewer"; // Importe o novo componente
 
-import { ClipboardType, Wand2, Trash2, Clock, Loader2, BookOpen, Play, FileUp, FileText } from "lucide-react";
+import { ClipboardType, Wand2, Trash2, Clock, Loader2, BookOpen, Play, FileUp, FileText,Plus } from "lucide-react";
 import Navbar from "./ui/navbar";
 
 
@@ -26,6 +26,8 @@ export default function Dashboard({ user, onLogout, onStartStudy, onNavigateToAn
   const [studyContent, setStudyContent] = useState("");
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
   const [newDeckTitle, setNewDeckTitle] = useState("");
+  const [showNewDeckInput, setShowNewDeckInput] = useState(false)
+
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -230,7 +232,11 @@ export default function Dashboard({ user, onLogout, onStartStudy, onNavigateToAn
                   }}
                   className="h-40 resize-none text-sm"
                 />
-
+                   {studyContent.length > 0 && (
+                    <p className="text-xs text-slate-500 mt-2">
+                      {studyContent.length} caracteres
+                    </p>
+                  )}
                 {/* Divisor do INPUT para o PDF*/}
                 {/* <div className="relative">
                   <div className="absolute inset-0 flex items-center">
@@ -277,63 +283,106 @@ export default function Dashboard({ user, onLogout, onStartStudy, onNavigateToAn
                 </label> */}
 
                 {/* Seleção do Deck */}
-                <div className="space-y-3 pt-4 border-t">
-                  <h3 className="text-sm font-medium">Onde salvar os flashcards?</h3>
-                  <select
-                    id="deck-select"
-                    value={selectedDeckId || ""}
-                    onChange={(e) => {
-                      setSelectedDeckId(e.target.value || null);
-                      if (e.target.value) setNewDeckTitle("");
-                    }}
-                    className="w-full p-2 border rounded text-sm bg-background"
-                  >
-                    <option value="">Adicionar a um deck existente...</option>
-                    {decks.map((deck) => (
-                      <option key={deck.id} value={deck.id}>
-                        {deck.title}
-                      </option>
-                    ))}
-                  </select>
+                {studyContent.trim().length > 0 && (
+                  <div className="space-y-3 pt-4 border-t animate-in fade-in slide-in-from-top-4 duration-300">
+                    <h3 className="text-sm font-medium">Onde salvar os flashcards?</h3>
 
-                  <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Ou</span>
-                  </div>
-                </div> 
-
-                  <Input
-                    id="new-deck-title"
-                    placeholder="Digite o nome do seu novo deck de flashcards"
-                    value={newDeckTitle}
-                    onChange={(e) => {
-                      setNewDeckTitle(e.target.value);
-                      if (e.target.value) setSelectedDeckId(null);
-                    }}
-                  />
-                </div>
-
-                {/* Botão para gerar os FLASHCARDS */}
-                <div className="pt-4">
-                  <Button
-                    onClick={handleGenerate}
-                    disabled={generateFlashcards.isPending}
-                    className="w-full"
-                  >
-                    {generateFlashcards.isPending ? (
+                    {/* Lógica para alternar entre selecionar e criar um novo deck */}
+                    {!showNewDeckInput ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando...
+                        {/* MODO DE SELEÇÃO (PADRÃO) */}
+                        <select
+                          id="deck-select"
+                          value={selectedDeckId || ""}
+                          onChange={(e) => setSelectedDeckId(e.target.value || null)}
+                          className="w-full p-2 border rounded text-sm bg-background"
+                        >
+                          <option value="">Adicionar a um deck existente...</option>
+                          {decks.map((deck) => (
+                            <option key={deck.id} value={deck.id}>
+                              {deck.title}
+                            </option>
+                          ))}
+                        </select>
+
+                        <div className="relative">
+                          <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t" />
+                          </div>
+                          <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-card px-2 text-muted-foreground">Ou</span>
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => {
+                            setShowNewDeckInput(true); // Muda para o modo de criação
+                            setSelectedDeckId(null); // Limpa a seleção anterior
+                          }}
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Criar novo deck
+                        </Button>
                       </>
                     ) : (
                       <>
-                        <Wand2 className="mr-2 h-4 w-4" /> Gerar Flashcards
+                        {/* MODO DE CRIAÇÃO */}
+                        <div className="space-y-2">
+                          <Input
+                            id="new-deck-title"
+                            placeholder="Digite o nome do seu novo deck"
+                            value={newDeckTitle}
+                            onChange={(e) => setNewDeckTitle(e.target.value)}
+                            // autoFocus // Foca no input assim que ele aparece
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs text-muted-foreground"
+                            onClick={() => {
+                              setShowNewDeckInput(false); // Volta para o modo de seleção
+                              setNewDeckTitle(''); // Limpa o texto do input
+                            }}
+                          >
+                            ← Escolher deck existente
+                          </Button>
+                        </div>
                       </>
                     )}
-                  </Button>
-                </div>
+                  </div>
+                )}
+
+                  {/* Botão para gerar os FLASHCARDS com lógica de validação aprimorada */}
+                  <div className="pt-4">
+                    <Button
+                      onClick={handleGenerate}
+                      disabled={
+                        !studyContent.trim() ||
+                        (!selectedDeckId && !newDeckTitle.trim()) ||
+                        generateFlashcards.isPending
+                      }
+                      className="w-full"
+                    >
+                      {generateFlashcards.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="mr-2 h-4 w-4" /> Gerar Flashcards
+                        </>
+                      )}
+                    </Button>
+
+                    {/* Mensagem de ajuda contextual */}
+                    {studyContent.trim() && !selectedDeckId && !newDeckTitle.trim() && (
+                      <p className="text-xs text-center text-muted-foreground mt-2">
+                        Selecione ou crie um deck para continuar.
+                      </p>
+                    )}
+                  </div>
               </CardContent>
             </Card>
           </div>
