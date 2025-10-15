@@ -31,7 +31,6 @@ export default function Dashboard({
   const [newDeckTitle, setNewDeckTitle] = useState("");
   const [showNewDeckInput, setShowNewDeckInput] = useState(false);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [selectedPages, setSelectedPages] = useState<number[]>([]);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   const { toast } = useToast();
@@ -91,17 +90,7 @@ export default function Dashboard({
     );
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setStudyContent("");
-      setPdfFile(file);
-      setIsPdfModalOpen(true);
-    }
-  };
-
   const handlePdfConfirm = (pages: number[]) => {
-    setSelectedPages(pages);
     setIsPdfModalOpen(false);
   };
 

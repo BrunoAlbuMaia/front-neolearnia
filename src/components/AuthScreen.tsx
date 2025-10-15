@@ -28,11 +28,10 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     setIsLoading(true);
 
     try {
-      let authResult;
       if (isLogin) {
-        authResult = await loginWithEmail(formData.email, formData.password);
+        await loginWithEmail(formData.email, formData.password);
       } else {
-        authResult = await registerWithEmail(formData.email, formData.password);
+        await registerWithEmail(formData.email, formData.password);
       }
       
       try {

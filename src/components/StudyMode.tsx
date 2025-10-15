@@ -26,7 +26,6 @@ interface StudyModeProps {
 export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [showDifficultyButtons, setShowDifficultyButtons] = useState(false);
   const [cardStartTime, setCardStartTime] = useState(new Date());
   
   const { toast } = useToast();
@@ -50,18 +49,11 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
 
   const resetCard = () => {
     setIsFlipped(false);
-    setShowDifficultyButtons(false);
     setCardStartTime(new Date());
   };
 
   const handleFlip = () => {
-    if (!isFlipped) {
-      setIsFlipped(true);
-      setShowDifficultyButtons(true);
-    } else {
-      setIsFlipped(false);
-      setShowDifficultyButtons(false);
-    }
+    setIsFlipped(!isFlipped);
   };
 
   const handleDifficulty = (difficulty: 'easy' | 'medium' | 'difficult') => {

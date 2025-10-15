@@ -1,4 +1,4 @@
-import { QueryClient, type QueryFunctionContext } from "@tanstack/react-query";
+import { QueryClient, type QueryFunction } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUserToken, getCurrentUser } from "./firebase";
 
