@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { loginWithEmail, registerWithEmail } from "../lib/firebase";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Card, CardContent } from "../components/ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Card, CardContent } from "./ui/card";
 import { useToast } from "../hooks/use-toast";
+import { useSyncUser } from "../hooks/useAuth";
 import { Brain, Loader2 } from "lucide-react";
-import { useSyncUser } from "../lib/queryClient";
 
 interface AuthScreenProps {
   onAuthSuccess: () => void;
@@ -28,32 +28,20 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     setIsLoading(true);
 
     try {
-      // console.log('Attempting auth operation:', { isLogin, email: formData.email });
-      
       let authResult;
       if (isLogin) {
         authResult = await loginWithEmail(formData.email, formData.password);
-        // console.log('Login successful:', authResult.user.uid);
       } else {
         authResult = await registerWithEmail(formData.email, formData.password);
-        // console.log('Registration successful:', authResult.user.uid);
       }
       
-      // Sync user data with backend
-      // console.log('Syncing user data with backend...', {
-      //   email: formData.email,
-      //   name: formData.name || formData.email.split('@')[0],
-      //   userUid: authResult.user.uid
-      // });
       try {
-        const syncResult = await syncUser.mutateAsync({
+        await syncUser.mutateAsync({
           email: formData.email,
           name: formData.name || formData.email.split('@')[0]
         });
-        // console.log('User data synced successfully:', syncResult);
       } catch (syncError) {
         console.error('Failed to sync user data:', syncError);
-        // Don't block the login process if sync fails
       }
       
       onAuthSuccess();
@@ -63,12 +51,9 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
       });
     } catch (error: any) {
       console.error('Auth error:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
       
       let errorMessage = error.message || "Ocorreu um erro. Tente novamente.";
       
-      // Handle specific Firebase errors
       if (error.code === 'auth/configuration-not-found') {
         errorMessage = "Erro de configuração do Firebase. Verifique as variáveis de ambiente.";
       } else if (error.code === 'auth/email-already-in-use') {
@@ -98,82 +83,86 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-accent/5 to-secondary flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8 animate-fade-in">
-        {/* Logo and Header */}
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-primary rounded-full flex items-center justify-center mb-4">
             <Brain className="text-primary-foreground text-2xl" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">NeoLearnIA</h1>
-          <p className="text-muted-foreground mt-2">Gerador inteligente de flashcards para seus estudos</p>
+          <h1 className="text-4xl font-bold text-foreground mb-2">NeoLearnIA</h1>
+          <p className="text-muted-foreground">Flashcards inteligentes com IA</p>
         </div>
 
-        {/* Auth Toggle */}
-        <div className="flex bg-muted rounded-lg p-1">
-          <Button
-            variant={isLogin ? "secondary" : "ghost"}
-            className="flex-1"
-            onClick={() => setIsLogin(true)}
-            data-testid="button-login-tab"
-          >
-            Entrar
-          </Button>
-          <Button
-            variant={!isLogin ? "secondary" : "ghost"}
-            className="flex-1"
-            onClick={() => setIsLogin(false)}
-            data-testid="button-register-tab"
-          >
-            Criar Conta
-          </Button>
-        </div>
+        <Card className="border-2">
+          <CardContent className="pt-6">
+            <div className="flex mb-6 p-1 bg-muted rounded-lg">
+              <button
+                type="button"
+                onClick={() => setIsLogin(true)}
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${
+                  isLogin
+                    ? "bg-background shadow text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Login
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsLogin(false)}
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${
+                  !isLogin
+                    ? "bg-background shadow text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Cadastro
+              </button>
+            </div>
 
-        {/* Auth Form */}
-        <Card>
-          <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
-                <div>
-                  <Label htmlFor="name">Nome completo</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="register-name">Nome</Label>
                   <Input
-                    id="name"
+                    id="register-name"
                     type="text"
                     placeholder="Seu nome"
                     value={formData.name}
                     onChange={handleInputChange}
-                    required
-                    data-testid="input-name"
+                    className="w-full"
                   />
                 </div>
               )}
-              <div>
-                <Label htmlFor="email">E-mail</Label>
+
+              <div className="space-y-2">
+                <Label htmlFor={isLogin ? "login-email" : "register-email"}>Email</Label>
                 <Input
-                  id="email"
+                  id={isLogin ? "login-email" : "register-email"}
                   type="email"
                   placeholder="seu@email.com"
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  data-testid="input-email"
+                  className="w-full"
                 />
               </div>
-              <div>
-                <Label htmlFor="password">Senha</Label>
+
+              <div className="space-y-2">
+                <Label htmlFor={isLogin ? "login-password" : "register-password"}>Senha</Label>
                 <Input
-                  id="password"
+                  id={isLogin ? "login-password" : "register-password"}
                   type="password"
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleInputChange}
                   required
-                  data-testid="input-password"
+                  className="w-full"
                 />
               </div>
+
               <Button
                 type="submit"
                 className="w-full"
                 disabled={isLoading}
-                data-testid="button-auth-submit"
               >
                 {isLoading ? (
                   <>
@@ -181,12 +170,16 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                     {isLogin ? "Entrando..." : "Criando conta..."}
                   </>
                 ) : (
-                  isLogin ? "Entrar" : "Criar Conta"
+                  <>{isLogin ? "Entrar" : "Criar Conta"}</>
                 )}
               </Button>
             </form>
           </CardContent>
         </Card>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Ao continuar, você concorda com nossos termos de uso
+        </p>
       </div>
     </div>
   );
