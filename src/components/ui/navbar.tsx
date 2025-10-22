@@ -1,67 +1,186 @@
-// src/components/Navbar.tsx
+// src/components/Sidebar.tsx
 
 import { Button } from "./button"; // Certifique-se que o caminho para seus componentes ui está correto
 import { ThemeToggle } from "../ThemeToggle"; // E para o ThemeToggle também
-import { Brain, BarChart3, LogOut } from "lucide-react";
+// Importe os componentes Sheet necessários. Se estiver usando shadcn/ui:
+import { Sheet, SheetContent, SheetTrigger } from "./sheet"; 
+import { Brain, BarChart3, LogOut, Menu, Home, Settings } from "lucide-react";
+import React from "react";
 
-interface NavbarProps {
+interface SidebarProps {
   user: any;
   onLogout: () => void;
-  onNavigateToAnalytics?: () => void;
+  onNavigateToAnalytics: () => void; // Tornando obrigatório para o exemplo
+  onNavigateToHome: () => void;
+  onNavigateToSettings: () => void;
 }
 
-export default function Navbar({ user, onLogout, onNavigateToAnalytics }: NavbarProps) {
-  return (
-    <nav className="bg-card border-b border-border px-4 py-3 sticky top-0 z-50">
-      {/*
-        ESTA É A ESTRUTURA CORRETA E DEFINITIVA:
-        - 'flex-wrap': Permite que os blocos de Logo e Ações quebrem a linha.
-        - 'justify-center': No mobile, centraliza tudo para um visual limpo.
-        - 'md:justify-between': No desktop, alinha o logo à esquerda e as ações à direita.
-      */}
-      <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-center md:justify-between gap-4">
-        
-        {/* Seção do Logo (Esquerda) */}
-        <div className="flex items-center space-x-3">
-          <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-            <Brain className="text-primary-foreground text-sm" />
-          </div>
-          <h1 className="text-xl font-bold text-foreground">NeoLearnIA</h1>
+// Definição dos links de navegação
+const navigationItems = [
+  { 
+    name: "Início", 
+    icon: Home, 
+    action: 'onNavigateToHome',
+    dataTestId: 'sidebar-link-home'
+  },
+  { 
+    name: "Analytics", 
+    icon: BarChart3, 
+    action: 'onNavigateToAnalytics', 
+    dataTestId: 'sidebar-link-analytics'
+  },
+  { 
+    name: "Configurações", 
+    icon: Settings, 
+    action: 'onNavigateToSettings', 
+    dataTestId: 'sidebar-link-settings'
+  },
+];
+
+// Componente para um único item de navegação
+interface NavLinkProps {
+  name: string;
+  Icon: React.ElementType; // Tipo correto para um componente Lucide
+  onClick: () => void;
+  dataTestId: string;
+}
+
+const NavLink = ({ name, Icon, onClick, dataTestId }: NavLinkProps) => (
+  <Button
+    variant="ghost"
+    className="w-full justify-start text-base py-6 transition-colors duration-200 text-muted-foreground hover:text-primary hover:bg-muted"
+    onClick={onClick}
+    data-testid={dataTestId}
+  >
+    <Icon className="h-5 w-5 mr-3" />
+    {name}
+  </Button>
+);
+
+
+// ----------------------------------------------------
+// Componente principal da Sidebar
+// ----------------------------------------------------
+
+export default function Sidebar({ 
+  user, 
+  onLogout, 
+  onNavigateToAnalytics, 
+  onNavigateToHome,
+  onNavigateToSettings
+}: SidebarProps) {
+
+  // Mapeamento das ações para ser passado para NavLink
+  const actionsMap = {
+    onNavigateToHome,
+    onNavigateToAnalytics,
+    onNavigateToSettings
+  }
+
+  // O conteúdo do Sidebar, usado tanto no modo desktop quanto no Sheet
+  const sidebarContent = (
+    <div className="flex flex-col h-full p-4">
+      
+      {/* Logo/Título */}
+      <div className="flex items-center space-x-3 mb-8 px-2">
+        <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+          <Brain className="text-primary-foreground text-sm" />
+        </div>
+        <h1 className="text-xl font-bold text-foreground">NeoLearnIA</h1>
+      </div>
+
+      {/* Navegação Principal */}
+      <div className="flex flex-col space-y-2 flex-grow">
+        {navigationItems.map(item => {
+          // Acessa a função de ação correta do objeto actionsMap
+          const actionFn = actionsMap[item.action as keyof typeof actionsMap]; 
+          return (
+            <NavLink
+              key={item.name}
+              name={item.name}
+              Icon={item.icon}
+              onClick={actionFn}
+              dataTestId={item.dataTestId}
+            />
+          );
+        })}
+      </div>
+
+      {/* Rodapé com Infos do Usuário, Theme e Logout */}
+      <div className="mt-auto border-t border-border pt-4 space-y-3">
+        {/* Informação do Usuário */}
+        <div className="px-2">
+            <p className="text-sm font-semibold text-foreground truncate" data-testid="text-user-name">
+                {user?.email || "Usuário"}
+            </p>
+            <p className="text-xs text-muted-foreground">Admin</p>
         </div>
 
-        {/* Seção de Ações (Direita) */}
-        <div className="flex items-center flex-wrap justify-center gap-x-4 gap-y-2">
-          {onNavigateToAnalytics && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onNavigateToAnalytics}
-              className="flex items-center gap-2"
-              data-testid="button-analytics"
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Analytics</span>
-            </Button>
-          )}
-          
-          <ThemeToggle />
-          
-          <span className="text-sm text-muted-foreground hidden lg:block" data-testid="text-user-name">
-            {user?.email || "Usuário"}
-          </span>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onLogout}
-            className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
-            data-testid="button-logout"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Sair</span>
-          </Button>
-        </div>
+        {/* Botão de Logout */}
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-base text-red-500 hover:text-red-600 hover:bg-muted py-6"
+          onClick={onLogout}
+          data-testid="button-logout"
+        >
+          <LogOut className="h-5 w-5 mr-3" />
+          Sair
+        </Button>
+        
+        {/* Toggle do Tema (Alinhado à esquerda no sidebar) */}
+        {/* <div className="flex justify-start px-2 pt-2">
+            <ThemeToggle />
+        </div> */}
       </div>
-    </nav>
+    </div>
   );
+
+
+  return (
+    <React.Fragment>
+      {/* ----------------------------------------------------
+          1. Sidebar Fixo (Desktop/md e acima)
+          ---------------------------------------------------- */}
+      {/* <nav
+        className="hidden md:flex flex-col w-64 bg-card border-r border-border h-screen fixed top-0 left-0 z-40"
+        data-testid="sidebar-desktop"
+      >
+        {sidebarContent}
+      </nav> */}
+  
+      {/* ----------------------------------------------------
+          2. Navbar Superior com Menu Hamburger (Todas as telas)
+          ---------------------------------------------------- */}
+      <header
+        className="bg-card border-b border-border p-3 flex items-center justify-between sticky top-0 z-50 shadow-md"
+        data-testid="navbar"
+      >
+        {/* Logo/Título */}
+        <div className="flex items-center space-x-3">
+          <div className="h-7 w-7 bg-primary rounded-lg flex items-center justify-center">
+            <Brain className="text-primary-foreground text-sm" />
+          </div>
+          <h1 className="text-lg font-bold text-foreground">NeoLearnIA</h1>
+        </div>
+  
+        {/* Botão do Menu Hamburger (Sheet Trigger) */}
+        <div className="flex items-center space-x-2">
+          <ThemeToggle />
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" data-testid="button-menu">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+  
+            {/* O conteúdo do Sheet é o mesmo do Sidebar */}
+            <SheetContent side="left" className="p-0 w-64">
+              {sidebarContent}
+            </SheetContent>
+          </Sheet>
+        </div>
+      </header>
+    </React.Fragment>
+  );
+  
 }

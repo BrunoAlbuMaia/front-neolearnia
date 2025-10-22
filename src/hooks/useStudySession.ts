@@ -6,6 +6,7 @@ import type {
   UpdateStudySessionPayload,
   RecordReviewPayload,
 } from '../types';
+import { SingleStoreJson } from 'drizzle-orm/singlestore-core';
 
 export interface StudyStats {
   easy: number;
@@ -23,6 +24,7 @@ export function useStudySession(flashcardSetId?: string, totalCards?: number) {
     mutationFn: (payload: CreateStudySessionPayload) =>
       studyApi.createStudySession(payload),
     onSuccess: (session) => {
+      console.log(session)
       setSessionId(session.id);
     },
   });

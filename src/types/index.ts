@@ -2,17 +2,21 @@ export interface Flashcard {
   id: string;
   question: string;
   answer: string;
-  setId: string;
-  difficulty?: 'easy' | 'medium' | 'difficult';
-  createdAt?: string;
+  set_id: string;
+  review_count: number;
+  created_at?: string ;
+  created_by:string;
+  updated_at?:string;
+  updated_by?:string;
 }
 
 export interface FlashcardSet {
   id: string;
+  user_id: string;
   title: string;
-  userId: string;
-  createdAt: string;
-  updatedAt?: string;
+  original_text:string;
+  created_at: string;
+
 }
 
 export interface StudySession {
@@ -96,4 +100,8 @@ export interface RecordReviewPayload {
 
 export interface UpdateFlashcardDifficultyPayload {
   difficulty: 'easy' | 'medium' | 'difficult';
+}
+
+export interface UpdateFlashcardSets {
+  title:string
 }

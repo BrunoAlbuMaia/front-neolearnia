@@ -64,5 +64,6 @@ export async function apiGet<T = unknown>(endpoint: string): Promise<T> {
   });
 
   await throwIfResNotOk(res);
+  console.log(res)
   return res.json();
 }

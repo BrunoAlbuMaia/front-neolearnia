@@ -32,7 +32,7 @@ export const flashcards = pgTable("flashcards", {
 export const studySessions = pgTable("study_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  flashcardSetId: varchar("flashcard_set_id").notNull().references(() => flashcardSets.id),
+  flashcard_set_id: varchar("flashcard_set_id").notNull().references(() => flashcardSets.id),
   startedAt: timestamp("started_at").defaultNow(),
   endedAt: timestamp("ended_at"),
   totalCards: integer("total_cards").notNull(),
@@ -88,7 +88,7 @@ export const insertFlashcardSchema = createInsertSchema(flashcards).pick({
 // Progress Tracking Schemas
 export const insertStudySessionSchema = createInsertSchema(studySessions).pick({
   userId: true,
-  flashcardSetId: true,
+  flashcard_set_id: true,
   totalCards: true,
 });
 

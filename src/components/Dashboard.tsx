@@ -6,11 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Dialog, DialogContent } from "./ui/dialog";
 import { useToast } from "../hooks/use-toast";
 import { useFlashcardSets, useGenerateFlashcards, useDeleteFlashcardSet } from "../hooks/useFlashcards";
-import { flashcardsApi } from "../api";
+import Decks from './Decks'
 import type { Flashcard } from "../types";
 import PdfPreviewer from "./ui/pdfPreviewer";
 import { ClipboardType, Wand2, Trash2, Loader2, BookOpen, Play, Plus } from "lucide-react";
 import Navbar from "./ui/navbar";
+import { onLog } from "firebase/app";
 
 interface DashboardProps {
   user: any;
@@ -94,45 +95,6 @@ export default function Dashboard({
     setIsPdfModalOpen(false);
   };
 
-  const handleStudyDeck = async (deckId: string) => {
-    try {
-      const flashcards = await flashcardsApi.getFlashcardsBySetId(deckId);
-      if (flashcards.length === 0) {
-        toast({
-          title: "Nenhum flashcard encontrado",
-          description: "Este deck não contém flashcards ainda.",
-          variant: "destructive",
-        });
-        return;
-      }
-      onStartStudy(flashcards);
-    } catch (error) {
-      toast({
-        title: "Erro ao carregar flashcards",
-        description: "Não foi possível carregar os flashcards do deck.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteDeck = (deckId: string) => {
-    if (window.confirm("Tem certeza que deseja deletar este deck? Esta ação não pode ser desfeita.")) {
-      deleteDeck.mutate(deckId, {
-        onSuccess: () => {
-          toast({
-            title: "Deck deletado com sucesso!",
-          });
-        },
-        onError: (error: any) => {
-          toast({
-            title: "Erro ao deletar deck",
-            description: error.message || "Ocorreu um erro. Tente novamente.",
-            variant: "destructive",
-          });
-        },
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -286,83 +248,11 @@ export default function Dashboard({
               </CardContent>
             </Card>
           </div>
-            
-          <div className="space-y-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center">
-                  <BookOpen className="text-primary mr-2 h-5 w-5" />
-                  Seus Decks
-                </CardTitle>
-                <span
-                  className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded-full"
-                  data-testid="text-deck-count"
-                >
-                  {decks.length} decks
-                </span>
-              </CardHeader>
-              <CardContent>
-                {isLoadingDecks ? (
-                  <div className="text-center py-12">
-                    <Loader2 className="animate-spin h-8 w-8 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground text-sm">
-                      Carregando decks...
-                    </p>
-                  </div>
-                ) : decks.length === 0 ? (
-                  <div className="text-center py-12">
-                    <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Você ainda não criou nenhum deck.
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Cole um conteúdo acima para criar seu primeiro deck!
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {decks.map((deck) => (
-                      <div
-                        key={deck.id}
-                        className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 border rounded-lg hover:bg-muted/30 transition-colors"
-                        data-testid={`card-deck-${deck.id}`}
-                      >
-                        <div className="flex-1">
-                          <h3
-                            className="font-medium text-sm text-foreground"
-                            data-testid={`text-deck-title-${deck.id}`}
-                          >
-                            {deck.title}
-                          </h3>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Criado em{" "}
-                            {new Date(deck.createdAt || "").toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-2 self-end sm:self-center">
-                          <Button
-                            size="sm"
-                            onClick={() => handleStudyDeck(deck.id)}
-                            data-testid={`button-study-${deck.id}`}
-                          >
-                            <Play className="h-4 w-4 mr-1" /> Estudar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteDeck(deck.id)}
-                            data-testid={`button-delete-${deck.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+
+          <Decks
+            onStartStudy={onStartStudy}>
+          </Decks>
+          
         </div>
       </div>
     </div>

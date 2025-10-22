@@ -41,7 +41,7 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
     isCreatingSession,
     isRecordingReview,
   } = useStudySession(
-    flashcards[0]?.setId,
+    flashcards[0]?.set_id,
     flashcards.length
   );
 
@@ -158,8 +158,8 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
         <div className="w-full max-w-2xl mx-auto">
           <div className="flip-card w-full aspect-video mb-6 perspective-1000">
             <div 
-              className={`flip-card-inner relative w-full h-full transition-transform duration-600 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}
-            >
+              className={`flip-card-inner relative w-full h-full transition-transform duration-600 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+            
               <Card className="flip-card-front absolute w-full h-full backface-hidden shadow-xl">
                 <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
                   <div className="mb-4">

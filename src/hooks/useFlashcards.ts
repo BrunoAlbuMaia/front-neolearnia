@@ -51,3 +51,16 @@ export function useUpdateFlashcardDifficulty() {
       flashcardsApi.updateFlashcardDifficulty(flashcardId, { difficulty }),
   });
 }
+
+
+export function useUpdateFlashcardSet() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ setId, title }: { setId: string; title: string }) =>
+      flashcardsApi.updateFlashcardSets(setId, { title }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.flashcardSets() });
+    },
+  });
+}
