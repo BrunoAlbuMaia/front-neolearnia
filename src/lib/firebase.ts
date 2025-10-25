@@ -14,7 +14,7 @@ import {
 // ========================
 // CONFIGURAÇÃO DO FIREBASE
 // ========================
-const useMockAuth = import.meta.env.VITE_AUTH_MODE === 'mock' || import.meta.env.DEV === false;
+const useMockAuth = import.meta.env.VITE_AUTH_MODE === 'mock' || import.meta.env.DEV === true;
 const hasFirebaseConfig =
   import.meta.env.VITE_FIREBASE_API_KEY &&
   import.meta.env.VITE_FIREBASE_PROJECT_ID &&
