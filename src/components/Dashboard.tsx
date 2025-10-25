@@ -6,11 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Dialog, DialogContent } from "./ui/dialog";
 import { useToast } from "../hooks/use-toast";
 import { useFlashcardSets, useGenerateFlashcards, useDeleteFlashcardSet } from "../hooks/useFlashcards";
-import Decks from './Decks'
+import Decks from './Decks/Decks'
 import type { Flashcard } from "../types";
 import PdfPreviewer from "./ui/pdfPreviewer";
 import { ClipboardType, Wand2, Trash2, Loader2, BookOpen, Play, Plus } from "lucide-react";
-import Navbar from "./ui/navbar";
 import { onLog } from "firebase/app";
 
 interface DashboardProps {
@@ -98,11 +97,7 @@ export default function Dashboard({
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar 
-        user={user} 
-        onLogout={onLogout} 
-        onNavigateToAnalytics={onNavigateToAnalytics} 
-      />
+      
       
       <Dialog open={isPdfModalOpen} onOpenChange={setIsPdfModalOpen}>
         <DialogContent className="w-full max-w-4xl h-[90vh] p-0 flex flex-col">

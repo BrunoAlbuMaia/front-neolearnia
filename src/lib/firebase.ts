@@ -1,13 +1,24 @@
+// lib/firebase/index.ts
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, type User } from "firebase/auth";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  type User,
+} from "firebase/auth";
 
-// Check if we should use mock auth mode (for development)
-const useMockAuth = import.meta.env.VITE_AUTH_MODE === 'mock' || import.meta.env.DEV === true;
-
-// Check if we have real Firebase config
-const hasFirebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY && 
-                          import.meta.env.VITE_FIREBASE_PROJECT_ID && 
-                          import.meta.env.VITE_FIREBASE_APP_ID;
+// ========================
+// CONFIGURAÇÃO DO FIREBASE
+// ========================
+const useMockAuth = import.meta.env.VITE_AUTH_MODE === 'mock' || import.meta.env.DEV === false;
+const hasFirebaseConfig =
+  import.meta.env.VITE_FIREBASE_API_KEY &&
+  import.meta.env.VITE_FIREBASE_PROJECT_ID &&
+  import.meta.env.VITE_FIREBASE_APP_ID;
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDemo-Key-For-Development-Only",
@@ -17,14 +28,6 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:demo-app-id",
 };
 
-// console.log('Firebase config loaded:', { 
-//   hasRealConfig: hasFirebaseConfig,
-//   useMockAuth,
-//   projectId: firebaseConfig.projectId,
-//   apiKeyPresent: !!firebaseConfig.apiKey
-// });
-
-// Initialize Firebase only once (but only if not using mock auth)
 let app: any = null;
 let auth: any = null;
 
@@ -33,149 +36,125 @@ if (!useMockAuth) {
   auth = getAuth(app);
 }
 
-// Mock auth implementation for development
+// ========================
+// MOCK AUTH PARA DESENVOLVIMENTO
+// ========================
 class MockAuth {
   private currentUser: any = null;
   private listeners: ((user: any) => void)[] = [];
 
   constructor() {
-    // Check for existing user in localStorage
-    const savedUser = localStorage.getItem('mockUser');
-    if (savedUser) {
-      this.currentUser = JSON.parse(savedUser);
-    }
+    const savedUser = localStorage.getItem("mockUser");
+    if (savedUser) this.currentUser = JSON.parse(savedUser);
   }
 
-  async mockSignUp(email: string, password: string) {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Check if user already exists
-    const existingUsers = JSON.parse(localStorage.getItem('mockUsers') || '[]');
-    if (existingUsers.find((u: any) => u.email === email)) {
-      throw { code: 'auth/email-already-in-use', message: 'The email address is already in use by another account.' };
-    }
+  async mockSignUp(data: { email: string; password: string; name?: string; cep?: string; school?: string; educationLevel?: string }) {
+    await new Promise(r => setTimeout(r, 1000));
+    const existingUsers = JSON.parse(localStorage.getItem("mockUsers") || "[]");
+    if (existingUsers.find((u: any) => u.email === data.email))
+      throw { code: "auth/email-already-in-use", message: "Email já cadastrado." };
 
-    // Create new user
     const user = {
-      uid: 'mock-' + Date.now(),
-      email,
-      emailVerified: true
+      uid: "mock-" + Date.now(),
+      email: data.email,
+      emailVerified: true,
+      name: data.name || data.email.split("@")[0],
+      cep: data.cep || "",
+      school: data.school || "",
+      educationLevel: data.educationLevel || "",
     };
 
-    // Save user
     existingUsers.push(user);
-    localStorage.setItem('mockUsers', JSON.stringify(existingUsers));
-    localStorage.setItem('mockUser', JSON.stringify(user));
-    
+    localStorage.setItem("mockUsers", JSON.stringify(existingUsers));
+    localStorage.setItem("mockUser", JSON.stringify(user));
+
     this.currentUser = user;
     this.notifyListeners();
-    
     return { user };
   }
 
-  async mockSignIn(email: string, password: string) {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const existingUsers = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+  async mockSignIn(email: string) {
+    await new Promise(r => setTimeout(r, 800));
+    const existingUsers = JSON.parse(localStorage.getItem("mockUsers") || "[]");
     const user = existingUsers.find((u: any) => u.email === email);
-    
-    if (!user) {
-      throw { code: 'auth/user-not-found', message: 'There is no user record corresponding to this identifier.' };
-    }
-
-    localStorage.setItem('mockUser', JSON.stringify(user));
+    if (!user) throw { code: "auth/user-not-found", message: "Usuário não encontrado." };
+    localStorage.setItem("mockUser", JSON.stringify(user));
     this.currentUser = user;
     this.notifyListeners();
-    
     return { user };
   }
 
   async mockSignOut() {
-    localStorage.removeItem('mockUser');
+    localStorage.removeItem("mockUser");
     this.currentUser = null;
     this.notifyListeners();
   }
 
   onAuthStateChanged(callback: (user: any) => void) {
     this.listeners.push(callback);
-    // Call immediately with current user
     callback(this.currentUser);
-    
-    // Return unsubscribe function
-    return () => {
-      this.listeners = this.listeners.filter(listener => listener !== callback);
-    };
+    return () => { this.listeners = this.listeners.filter(l => l !== callback); };
   }
 
   private notifyListeners() {
     this.listeners.forEach(listener => listener(this.currentUser));
   }
 
-  get user() {
-    return this.currentUser;
-  }
+  get user() { return this.currentUser; }
 }
 
 const mockAuth = new MockAuth();
 
-export { auth };
-
-export const loginWithEmail = async (email: string, password: string) => {
-  if (useMockAuth) {
-    return mockAuth.mockSignIn(email, password);
-  }
-  return signInWithEmailAndPassword(auth, email, password);
+// ========================
+// FUNÇÕES DE AUTH EMAIL
+// ========================
+export const registerWithEmail = async (data: { email: string; password: string; name?: string; cep?: string; school?: string; educationLevel?: string }) => {
+  if (useMockAuth) return mockAuth.mockSignUp(data);
+  return createUserWithEmailAndPassword(auth, data.email, data.password);
 };
 
-export const registerWithEmail = async (email: string, password: string) => {
-  if (useMockAuth) {
-    return mockAuth.mockSignUp(email, password);
-  }
-  return createUserWithEmailAndPassword(auth, email, password);
+export const loginWithEmail = async (email: string, password?: string) => {
+  if (useMockAuth) return mockAuth.mockSignIn(email);
+  return signInWithEmailAndPassword(auth, email, password!);
 };
 
+// ========================
+// FUNÇÕES DE AUTH SOCIAL
+// ========================
+export const loginWithGoogle = async () => {
+  if (useMockAuth) {
+    const user = { uid: "mock-google-" + Date.now(), email: "google@mock.com", name: "Usuário Google" };
+    localStorage.setItem("mockUser", JSON.stringify(user));
+    mockAuth.user = user;
+    return { user };
+  }
+
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+
+  const result = await signInWithPopup(auth, provider);
+  return result.user;
+};
+// ========================
+// LOGOUT E AUTH STATE
+// ========================
 export const logout = async () => {
-  if (useMockAuth) {
-    return mockAuth.mockSignOut();
-  }
+  if (useMockAuth) return mockAuth.mockSignOut();
   return signOut(auth);
 };
 
 export const onAuthChange = (callback: (user: User | null) => void) => {
-  if (useMockAuth) {
-    return mockAuth.onAuthStateChanged(callback);
-  }
+  if (useMockAuth) return mockAuth.onAuthStateChanged(callback);
   return onAuthStateChanged(auth, callback);
 };
 
-// Get current user's ID token for API calls
-export const getCurrentUserToken = async (): Promise<string | null> => {
-  if (useMockAuth) {
-    // Return user-specific mock token for development
-    const token = mockAuth.user ? `mock-token-${mockAuth.user.uid}` : null;
-    // console.log('getCurrentUserToken - mockAuth.user:', mockAuth.user);
-    // console.log('getCurrentUserToken - returning token:', token);
-    return token;
-  }
-  
-  if (!auth?.currentUser) {
-    return null;
-  }
-  
-  try {
-    return await auth.currentUser.getIdToken();
-  } catch (error) {
-    console.error('Error getting ID token:', error);
-    return null;
-  }
-};
+// ========================
+// GET CURRENT USER / TOKEN
+// ========================
+export const getCurrentUser = () => (useMockAuth ? mockAuth.user : auth?.currentUser || null);
 
-// Get current user
-export const getCurrentUser = () => {
-  if (useMockAuth) {
-    return mockAuth.user;
-  }
-  return auth?.currentUser || null;
+export const getCurrentUserToken = async (): Promise<string | null> => {
+  if (useMockAuth) return mockAuth.user ? `mock-token-${mockAuth.user.uid}` : null;
+  if (!auth?.currentUser) return null;
+  try { return await auth.currentUser.getIdToken(); } catch { return null; }
 };

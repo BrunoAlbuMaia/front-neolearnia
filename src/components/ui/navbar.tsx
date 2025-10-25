@@ -1,54 +1,38 @@
 // src/components/Sidebar.tsx
-
-import { Button } from "./button"; // Certifique-se que o caminho para seus componentes ui está correto
-import { ThemeToggle } from "../ThemeToggle"; // E para o ThemeToggle também
-// Importe os componentes Sheet necessários. Se estiver usando shadcn/ui:
+import { Button } from "./button";
+import { ThemeToggle } from "../ThemeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "./sheet"; 
 import { Brain, BarChart3, LogOut, Menu, Home, Settings } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 
 interface SidebarProps {
   user: any;
   onLogout: () => void;
-  onNavigateToAnalytics: () => void; // Tornando obrigatório para o exemplo
+  onNavigateToAnalytics: () => void;
   onNavigateToHome: () => void;
   onNavigateToSettings: () => void;
 }
 
-// Definição dos links de navegação
+// Navegação
 const navigationItems = [
-  { 
-    name: "Início", 
-    icon: Home, 
-    action: 'onNavigateToHome',
-    dataTestId: 'sidebar-link-home'
-  },
-  { 
-    name: "Analytics", 
-    icon: BarChart3, 
-    action: 'onNavigateToAnalytics', 
-    dataTestId: 'sidebar-link-analytics'
-  },
-  { 
-    name: "Configurações", 
-    icon: Settings, 
-    action: 'onNavigateToSettings', 
-    dataTestId: 'sidebar-link-settings'
-  },
+  { name: "Início", icon: Home, action: 'onNavigateToHome', dataTestId: 'sidebar-link-home' },
+  { name: "Analytics", icon: BarChart3, action: 'onNavigateToAnalytics', dataTestId: 'sidebar-link-analytics' },
+  { name: "Configurações", icon: Settings, action: 'onNavigateToSettings', dataTestId: 'sidebar-link-settings' },
 ];
 
-// Componente para um único item de navegação
 interface NavLinkProps {
   name: string;
-  Icon: React.ElementType; // Tipo correto para um componente Lucide
+  Icon: React.ElementType;
   onClick: () => void;
+  isActive?: boolean;
   dataTestId: string;
 }
 
-const NavLink = ({ name, Icon, onClick, dataTestId }: NavLinkProps) => (
+const NavLink = ({ name, Icon, onClick, isActive, dataTestId }: NavLinkProps) => (
   <Button
     variant="ghost"
-    className="w-full justify-start text-base py-6 transition-colors duration-200 text-muted-foreground hover:text-primary hover:bg-muted"
+    className={`w-full justify-start text-base py-2 px-3 rounded-md transition-colors duration-200
+      ${isActive ? 'bg-primary text-white' : 'text-muted-foreground hover:text-primary hover:bg-muted'}`}
     onClick={onClick}
     data-testid={dataTestId}
   >
@@ -57,11 +41,6 @@ const NavLink = ({ name, Icon, onClick, dataTestId }: NavLinkProps) => (
   </Button>
 );
 
-
-// ----------------------------------------------------
-// Componente principal da Sidebar
-// ----------------------------------------------------
-
 export default function Sidebar({ 
   user, 
   onLogout, 
@@ -69,101 +48,82 @@ export default function Sidebar({
   onNavigateToHome,
   onNavigateToSettings
 }: SidebarProps) {
-
-  // Mapeamento das ações para ser passado para NavLink
   const actionsMap = {
     onNavigateToHome,
     onNavigateToAnalytics,
     onNavigateToSettings
-  }
+  };
 
-  // O conteúdo do Sidebar, usado tanto no modo desktop quanto no Sheet
+  // Estado para o item ativo
+  const [activeItem, setActiveItem] = useState('Início');
+
   const sidebarContent = (
     <div className="flex flex-col h-full p-4">
-      
-      {/* Logo/Título */}
-      <div className="flex items-center space-x-3 mb-8 px-2">
+      {/* Logo */}
+      <div className="flex items-center space-x-3 mb-6 px-2">
         <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
           <Brain className="text-primary-foreground text-sm" />
         </div>
         <h1 className="text-xl font-bold text-foreground">NeoLearnIA</h1>
       </div>
 
-      {/* Navegação Principal */}
-      <div className="flex flex-col space-y-2 flex-grow">
+      {/* Navegação */}
+      <div className="flex flex-col space-y-1 flex-grow">
         {navigationItems.map(item => {
-          // Acessa a função de ação correta do objeto actionsMap
-          const actionFn = actionsMap[item.action as keyof typeof actionsMap]; 
+          const actionFn = () => {
+            setActiveItem(item.name);
+            (actionsMap[item.action as keyof typeof actionsMap])();
+          };
           return (
             <NavLink
               key={item.name}
               name={item.name}
               Icon={item.icon}
               onClick={actionFn}
+              isActive={activeItem === item.name}
               dataTestId={item.dataTestId}
             />
           );
         })}
       </div>
 
-      {/* Rodapé com Infos do Usuário, Theme e Logout */}
-      <div className="mt-auto border-t border-border pt-4 space-y-3">
-        {/* Informação do Usuário */}
+      {/* Rodapé */}
+      <div className="mt-auto border-t border-border pt-4 flex flex-col space-y-2">
         <div className="px-2">
-            <p className="text-sm font-semibold text-foreground truncate" data-testid="text-user-name">
-                {user?.email || "Usuário"}
-            </p>
-            <p className="text-xs text-muted-foreground">Admin</p>
+          <p className="text-sm font-semibold text-foreground truncate" data-testid="text-user-name">
+            {user?.email || "Usuário"}
+          </p>
+          <p className="text-xs text-muted-foreground">Admin</p>
         </div>
 
-        {/* Botão de Logout */}
+        <ThemeToggle />
+
         <Button
           variant="ghost"
-          className="w-full justify-start text-base text-red-500 hover:text-red-600 hover:bg-muted py-6"
+          className="w-full justify-start text-base text-red-500 hover:text-red-600 hover:bg-muted py-2 px-3 rounded-md"
           onClick={onLogout}
           data-testid="button-logout"
         >
           <LogOut className="h-5 w-5 mr-3" />
           Sair
         </Button>
-        
-        {/* Toggle do Tema (Alinhado à esquerda no sidebar) */}
-        {/* <div className="flex justify-start px-2 pt-2">
-            <ThemeToggle />
-        </div> */}
       </div>
     </div>
   );
 
-
   return (
-    <React.Fragment>
-      {/* ----------------------------------------------------
-          1. Sidebar Fixo (Desktop/md e acima)
-          ---------------------------------------------------- */}
-      {/* <nav
-        className="hidden md:flex flex-col w-64 bg-card border-r border-border h-screen fixed top-0 left-0 z-40"
-        data-testid="sidebar-desktop"
-      >
-        {sidebarContent}
-      </nav> */}
-  
-      {/* ----------------------------------------------------
-          2. Navbar Superior com Menu Hamburger (Todas as telas)
-          ---------------------------------------------------- */}
-      <header
-        className="bg-card border-b border-border p-3 flex items-center justify-between sticky top-0 z-50 shadow-md"
-        data-testid="navbar"
-      >
-        {/* Logo/Título */}
-        <div className="flex items-center space-x-3">
+    <>
+      {/* Navbar Superior */}
+      <header className="bg-card border-b border-border p-2 flex items-center justify-between sticky top-0 z-50 shadow-sm" data-testid="navbar">
+        {/* Logo */}
+        <div className="flex items-center space-x-2">
           <div className="h-7 w-7 bg-primary rounded-lg flex items-center justify-center">
             <Brain className="text-primary-foreground text-sm" />
           </div>
           <h1 className="text-lg font-bold text-foreground">NeoLearnIA</h1>
         </div>
-  
-        {/* Botão do Menu Hamburger (Sheet Trigger) */}
+
+        {/* Botões Tema e Menu */}
         <div className="flex items-center space-x-2">
           <ThemeToggle />
           <Sheet>
@@ -172,15 +132,12 @@ export default function Sidebar({
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-  
-            {/* O conteúdo do Sheet é o mesmo do Sidebar */}
-            <SheetContent side="left" className="p-0 w-64">
+            <SheetContent side="left" className="p-2 w-64 overflow-y-auto">
               {sidebarContent}
             </SheetContent>
           </Sheet>
         </div>
       </header>
-    </React.Fragment>
+    </>
   );
-  
 }
