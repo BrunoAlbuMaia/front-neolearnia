@@ -2,12 +2,13 @@
 import { Button } from "./button";
 import { ThemeToggle } from "../ThemeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "./sheet"; 
-import { Brain, BarChart3, LogOut, Menu, Home, Settings } from "lucide-react";
+import { Brain, BarChart3, LogOut, Menu, Home, Settings, CircleArrowOutDownLeftIcon } from "lucide-react";
 import React, { useState } from "react";
 
 interface SidebarProps {
   user: any;
   onLogout: () => void;
+  onNavigateToReviewMode:() => void;
   onNavigateToAnalytics: () => void;
   onNavigateToHome: () => void;
   onNavigateToSettings: () => void;
@@ -16,8 +17,10 @@ interface SidebarProps {
 // Navegação
 const navigationItems = [
   { name: "Início", icon: Home, action: 'onNavigateToHome', dataTestId: 'sidebar-link-home' },
+  { name: "Revisão Diária", icon: CircleArrowOutDownLeftIcon, action: 'onNavigateToReviewMode', dataTestId: 'sidebar-link-reviewMode' },
   { name: "Analytics", icon: BarChart3, action: 'onNavigateToAnalytics', dataTestId: 'sidebar-link-analytics' },
   { name: "Configurações", icon: Settings, action: 'onNavigateToSettings', dataTestId: 'sidebar-link-settings' },
+  
 ];
 
 interface NavLinkProps {
@@ -44,12 +47,14 @@ const NavLink = ({ name, Icon, onClick, isActive, dataTestId }: NavLinkProps) =>
 export default function Sidebar({ 
   user, 
   onLogout, 
+  onNavigateToReviewMode,
   onNavigateToAnalytics, 
   onNavigateToHome,
   onNavigateToSettings
 }: SidebarProps) {
   const actionsMap = {
     onNavigateToHome,
+    onNavigateToReviewMode,
     onNavigateToAnalytics,
     onNavigateToSettings
   };

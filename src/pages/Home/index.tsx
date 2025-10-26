@@ -8,7 +8,7 @@ import { AnalyticsPage } from "../../components/AnalyticsPage";
 import { type Flashcard } from "../../../shared/schema";
 import { useToast } from "../../hooks/use-toast";
 
-type Screen = 'auth' | 'dashboard' | 'study' | 'analytics';
+type Screen = 'auth' | 'dashboard' | 'study' | 'analytics' | 'reviewMode';
 
 export default function Home() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('auth');
