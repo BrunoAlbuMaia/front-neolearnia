@@ -15,5 +15,5 @@ export const studyApi = {
     apiRequest<StudySession>('PATCH', `/api/study-sessions/${sessionId}`, payload),
 
   recordCardReview: (payload: RecordReviewPayload) =>
-    apiRequest<CardReview>('POST', '/api/card-reviews', payload),
+    apiRequest<CardReview>('POST', '/api/card-reviews/study', payload),
 };

@@ -3,11 +3,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { onAuthChange, logout } from "../../lib/firebase";
 import AuthScreen from "../../components/Auth/AuthScreen";
 import Dashboard from "../../components/Dashboard";
-import StudyMode from "../../components/StudyMode";
 import { AnalyticsPage } from "../../components/AnalyticsPage";
 import { type Flashcard } from "../../../shared/schema";
 import { useToast } from "../../hooks/use-toast";
-
+import { StudyPage } from "./StudyPage";
 type Screen = 'auth' | 'dashboard' | 'study' | 'analytics' | 'reviewMode';
 
 export default function Home() {
@@ -31,10 +30,12 @@ export default function Home() {
   }, []);
 
   const handleAuthSuccess = () => setCurrentScreen('dashboard');
+  
   const handleStartStudy = (flashcards: Flashcard[]) => {
     setStudyFlashcards(flashcards);
     setCurrentScreen('study');
   };
+  
   const handleBackToDashboard = () => setCurrentScreen('dashboard');
   const handleNavigateToAnalytics = () => setCurrentScreen('analytics');
 
@@ -59,7 +60,7 @@ export default function Home() {
       case 'auth':
         return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
       case 'study':
-        return <StudyMode flashcards={studyFlashcards} onBack={handleBackToDashboard} />;
+        return <StudyPage flashcards={studyFlashcards} onBack={handleBackToDashboard} />;
       case 'analytics':
         return (
           <div className="min-h-screen bg-background">

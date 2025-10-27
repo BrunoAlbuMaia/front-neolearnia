@@ -9,6 +9,19 @@ export interface Flashcard {
   updated_at?:string;
   updated_by?:string;
 }
+export interface ReviewCard {
+  flashcard_id: string;
+  name_deck: string;
+  question: string;
+  answer: string;
+  next_review_date: string;
+}
+
+
+export interface CardReviewShedules{
+  flashcardId:string;
+  difficulty:string
+}
 
 export interface FlashcardSet {
   id: string;

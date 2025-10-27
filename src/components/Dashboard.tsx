@@ -9,8 +9,8 @@ import { useFlashcardSets, useGenerateFlashcards, useDeleteFlashcardSet } from "
 import Decks from './Decks/Decks'
 import type { Flashcard } from "../types";
 import PdfPreviewer from "./ui/pdfPreviewer";
-import { ClipboardType, Wand2, Trash2, Loader2, BookOpen, Play, Plus } from "lucide-react";
-import { onLog } from "firebase/app";
+import { ClipboardType, Wand2, Loader2, Plus } from "lucide-react";
+
 
 interface DashboardProps {
   user: any;
@@ -31,6 +31,7 @@ export default function Dashboard({
   const [newDeckTitle, setNewDeckTitle] = useState("");
   const [showNewDeckInput, setShowNewDeckInput] = useState(false);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [selectedPages,setSelectedPages] = useState([])
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   const { toast } = useToast();
@@ -99,6 +100,7 @@ export default function Dashboard({
     <div className="min-h-screen bg-background">
       
       
+      
       <Dialog open={isPdfModalOpen} onOpenChange={setIsPdfModalOpen}>
         <DialogContent className="w-full max-w-4xl h-[90vh] p-0 flex flex-col">
           {pdfFile && (
@@ -140,6 +142,33 @@ export default function Dashboard({
                   }}
                   className="h-40 resize-none text-sm"
                 />
+                  {/* <div className="flex items-center justify-between">
+                    <Button
+                      variant="outline"
+                      onClick={() => document.getElementById("pdf-input")?.click()}
+                      className="flex items-center"
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Anexar PDF
+                    </Button>
+                    {pdfFile && <span className="text-sm text-muted-foreground">{pdfFile.name}</span>}
+                  </div>
+
+          
+          
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    id="pdf-input"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setPdfFile(file);
+                        setIsPdfModalOpen(true); // abre o modal com o preview
+                        setStudyContent(""); // limpa o texto se PDF for enviado
+                      }
+                    }}
+                  /> */}
                 {studyContent.length > 0 && (
                   <p className="text-xs text-slate-500 mt-2">
                     {studyContent.length} caracteres

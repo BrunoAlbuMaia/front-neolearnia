@@ -154,11 +154,11 @@ export default function RegisterForm({ onAuthSuccess }: RegisterFormProps) {
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
                 <Label>Nome <span className="text-red-500">*</span></Label>
-                <Input name="name" className="bg-grey-50 text-black" value={formData.name} onChange={handleChange} required/>
+                <Input name="name" className="bg-grey-50 text-black" value={formData.name} onChange={handleChange} placeholder="Digite seu nome" required/>
               </div>
               <div>
                 <Label>Sobrenome <span className="text-red-500">*</span></Label>
-                <Input name="lastname" className="bg-grey-50 text-black" value={formData.lastname} onChange={handleChange} required/>
+                <Input name="lastname" className="bg-grey-50 text-black" value={formData.lastname} onChange={handleChange} placeholder="Digite seu sobrenome" required/>
               </div>
             </div>
 
