@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { loginWithEmail } from "../../lib/firebase";
+import { loginWithEmail } from "../../lib/firebase/auth";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Loader2 } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
 import { useSyncUser } from "../../hooks/useAuth";
-import { loginWithGoogle } from "../../lib/firebase";
+import { loginWithGoogle } from "../../lib/firebase/auth";
 import { FcGoogle } from "react-icons/fc";
 
 interface LoginFormProps {

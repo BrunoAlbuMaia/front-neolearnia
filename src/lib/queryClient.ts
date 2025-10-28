@@ -1,6 +1,6 @@
 import { QueryClient, type QueryFunction } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { getCurrentUserToken, getCurrentUser } from "./firebase";
+import { getCurrentUserToken, getCurrentUser } from "./firebase/auth";
 
 
 async function throwIfResNotOk(res: Response) {
@@ -25,6 +25,12 @@ export async function apiRequest(
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
+
+  const sessionId = getSessionId();
+  if (sessionId) {
+    headers['X-Session-ID'] = sessionId;
+  }
+
   
   const res = await fetch(url, {
     method,

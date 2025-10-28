@@ -29,7 +29,8 @@ export default function ReviewMode() {
   const navigateToHome = () => setLocation("/");
 
   useEffect(() => {
-    if (error) {
+    console.log(error)
+    if (error != null) {
       toast({
         title: "Erro ao carregar revisões",
         description: "Não foi possível carregar os flashcards.",

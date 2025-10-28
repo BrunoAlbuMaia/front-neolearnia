@@ -22,7 +22,7 @@ export default function Decks({ onStartStudy }: DecksProps) {
   const { data: decks = [], isLoading: isLoadingDecks } = useFlashcardSets();
   const deleteDeck = useDeleteFlashcardSet();
   const updateDeck = useUpdateFlashcardSet();
-
+  
   const [editingDeckId, setEditingDeckId] = useState<string | null>(null);
   const [editedTitle, setEditedTitle] = useState("");
 
@@ -77,6 +77,8 @@ export default function Decks({ onStartStudy }: DecksProps) {
         }),
     });
   };
+
+
 
   return (
     <div className="space-y-5">

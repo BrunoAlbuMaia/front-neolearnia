@@ -18,6 +18,33 @@ export interface ReviewCard {
 }
 
 
+export interface SyncUserPayload {
+  email: string;
+  name: string;
+  sessionId: string; 
+}
+
+export interface SyncUserResponse {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    firebase_uid: string;
+    created_at: string;
+  };
+  session: {
+    id: string;
+    createdAt: string;
+  };
+  message: string;
+}
+
+export interface SessionInfo {
+  sessionId: string;
+  createdAt: number;
+  isValid: boolean;
+}
+
 export interface CardReviewShedules{
   flashcardId:string;
   difficulty:string

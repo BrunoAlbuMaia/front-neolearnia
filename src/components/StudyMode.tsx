@@ -4,7 +4,7 @@ import { Card, CardContent } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { useToast } from "../hooks/use-toast";
 import { useStudySession } from "../hooks/useStudySession";
-import { useUpdateFlashcardDifficulty } from "../hooks/useFlashcards";
+// import { useUpdateFlashcardDifficulty } from "../hooks/useFlashcards";
 import type { Flashcard } from "../types";
 import { 
   ArrowLeft, 
@@ -45,7 +45,7 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
     flashcards.length
   );
 
-  const updateFlashcardDifficulty = useUpdateFlashcardDifficulty();
+  // const updateFlashcardDifficulty = useUpdateFlashcardDifficulty();
 
   const resetCard = () => {
     setIsFlipped(false);
@@ -77,10 +77,10 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
 
     updateStats(difficulty);
 
-    updateFlashcardDifficulty.mutate({
-      flashcardId: currentCard.id,
-      difficulty
-    });
+    // updateFlashcardDifficulty.mutate({
+    //   flashcardId: currentCard.id,
+    //   difficulty
+    // });
     
     setTimeout(() => {
       if (currentCardIndex < flashcards.length - 1) {

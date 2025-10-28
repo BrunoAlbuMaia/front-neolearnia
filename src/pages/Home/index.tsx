@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { onAuthChange, logout } from "../../lib/firebase";
+import { onAuthChange, logout } from "../../lib/firebase/auth";
 import AuthScreen from "../../components/Auth/AuthScreen";
 import Dashboard from "../../components/Dashboard";
 import { AnalyticsPage } from "../../components/AnalyticsPage";
