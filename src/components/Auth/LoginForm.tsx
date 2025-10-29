@@ -98,6 +98,11 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
           onClick={async () => {
             try {
               const user = await loginWithGoogle();
+              await syncUser.mutateAsync({
+                email: user.email,
+                name: user.email.split("@")[0],
+              });
+              
               console.log("Usuário logado:", user);
               onAuthSuccess();
             } catch (error) {
