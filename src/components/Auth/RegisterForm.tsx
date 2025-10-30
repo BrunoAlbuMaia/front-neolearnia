@@ -103,7 +103,7 @@ export default function RegisterForm({ onAuthSuccess }: RegisterFormProps) {
       });
       toast({
         title: "Conta criada com sucesso!",
-        description: "Bem-vindo ao NeoLearnIA 🎉",
+        description: "Bem-vindo ao MemorizeMy 🎉",
       });
       onAuthSuccess();
     } catch (error: any) {

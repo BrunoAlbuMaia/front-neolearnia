@@ -104,6 +104,7 @@ export interface TimeAnalyticsData {
 export interface GenerateFlashcardsPayload {
   text: string;
   setId?: string;
+  qtdCards: number;
   title?: string;
 }
 

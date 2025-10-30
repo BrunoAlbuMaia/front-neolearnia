@@ -35,7 +35,7 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
             <Brain className="text-white h-7 w-7 sm:h-8 sm:w-8" />
           </motion.div>
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-gray-800 dark:text-white">
-            Memorize<span className="text-indigo-500">ME</span>
+            Memorize<span className="text-indigo-500">My</span>
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Flashcards inteligentes com IA

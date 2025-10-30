@@ -31,7 +31,7 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
 
       toast({
         title: "Login realizado com sucesso!",
-        description: "Bem-vindo de volta ao NeoLearnIA",
+        description: "Bem-vindo de volta ao MemorizeMy",
       });
       onAuthSuccess();
     } catch (error: any) {

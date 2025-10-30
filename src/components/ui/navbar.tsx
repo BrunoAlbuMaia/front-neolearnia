@@ -69,7 +69,7 @@ export default function Sidebar({
         <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
           <Brain className="text-primary-foreground text-sm" />
         </div>
-        <h1 className="text-xl font-bold text-foreground">NeoLearnIA</h1>
+        <h1 className="text-xl font-bold text-foreground">MemorizeMy</h1>
       </div>
 
       {/* Navegação */}
@@ -125,7 +125,7 @@ export default function Sidebar({
           <div className="h-7 w-7 bg-primary rounded-lg flex items-center justify-center">
             <Brain className="text-primary-foreground text-sm" />
           </div>
-          <h1 className="text-lg font-bold text-foreground">NeoLearnIA</h1>
+          <h1 className="text-lg font-bold text-foreground">MemorizeMy</h1>
         </div>
 
         {/* Botões Tema e Menu */}

@@ -63,10 +63,11 @@ export default function Dashboard({
       ? newDeckTitle.trim() 
       : (selectedDeckId ? undefined : `Flashcards - ${new Date().toLocaleDateString()}`);
 
-    generateFlashcards.mutate(
+      generateFlashcards.mutate(
       {
         text: studyContent,
         setId: selectedDeckId || undefined,
+        qtdCards: 10,
         title: deckTitle,
       },
       {
