@@ -7,19 +7,21 @@ import { AnalyticsPage } from "../../components/AnalyticsPage";
 import { type Flashcard } from "../../../shared/schema";
 import { useToast } from "../../hooks/use-toast";
 import { StudyPage } from "./StudyPage";
-type Screen = 'auth' | 'dashboard' | 'study' | 'analytics' | 'reviewMode';
+import { useUser } from "../../hooks/useUser";
+import OnboardingScreen from "../../components/Auth/Onboarding/OnboardingScreen";
+type Screen = 'auth' | 'dashboard' | 'study' | 'analytics' | 'reviewMode' | 'onboarding';
 
 export default function Home() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('auth');
   const [user, setUser] = useState<any>(null);
   const [studyFlashcards, setStudyFlashcards] = useState<Flashcard[]>([]);
   const { toast } = useToast();
+  const { userState, isLoading: userLoading } = useUser()
 
-  useEffect(() => {
-    const unsubscribe = onAuthChange((firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        setCurrentScreen('dashboard');
+   useEffect(() => {
+    const unsubscribe = onAuthChange((user) => {
+      if (user) {
+        setUser(user);
       } else {
         setUser(null);
         setCurrentScreen('auth');
@@ -28,6 +30,33 @@ export default function Home() {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const parsedUserState = Array.isArray(userState)
+    ? {
+        id: userState[0],
+        user_id: userState[1],
+        focus_area: userState[2],
+        learning_style: userState[3],
+        ai_level: userState[4],
+        motivation: userState[5],
+        preferred_schedule: userState[6],
+        created_at: userState[7],
+        has_onboarded: true // padrão quando já existe user_state
+      }
+    : userState;
+    
+    // ✅ Quando o estado do usuário é carregado
+    if (parsedUserState) {
+      if (!parsedUserState.has_onboarded) {
+        setCurrentScreen('onboarding');
+      } else {
+        setCurrentScreen('dashboard');
+      }
+    }
+  }, [user, userState]);
+
 
   const handleAuthSuccess = () => setCurrentScreen('dashboard');
   
@@ -69,6 +98,10 @@ export default function Home() {
             </div>
           </div>
         );
+      case 'onboarding':
+        return(
+          <OnboardingScreen></OnboardingScreen>
+        )
       default:
         return (
           <Dashboard 

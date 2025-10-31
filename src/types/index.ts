@@ -18,6 +18,15 @@ export interface ReviewCard {
 }
 
 
+export interface UserState {
+  focus_area: string;
+  learning_style: string;
+  ai_level: string;
+  motivation: string;
+  preferred_schedule: string;
+}
+
+
 export interface SyncUserPayload {
   email: string;
   name: string;
