@@ -5,7 +5,9 @@ import { ThemeProvider } from "../components/ThemeProvider";
 import { TooltipProvider } from "../components/ui/tooltip";
 import { Toaster } from "../components/ui/toaster";
 import { AuthProvider } from "../context/AuthContext";
+import { LoadingProvider } from "../context/LoadingContext";
 import { SessionGuard } from "../components/SessionGuard";
+import { GlobalSpinner } from "../components/GlobalSpinner";
 
 interface Props {
   children: React.ReactNode;
@@ -16,12 +18,16 @@ export function AppProviders({ children }: Props) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <AuthProvider>
-            {/* SessionGuard monitora e exibe feedback visual */}
-            <SessionGuard />
-            {children}
-            <Toaster />
-          </AuthProvider>
+          <LoadingProvider>
+            <AuthProvider>
+              {/* SessionGuard monitora e exibe feedback visual */}
+              <SessionGuard />
+              {/* Spinner global que aparece automaticamente durante requisições */}
+              <GlobalSpinner />
+              {children}
+              <Toaster />
+            </AuthProvider>
+          </LoadingProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

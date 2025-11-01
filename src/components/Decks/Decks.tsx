@@ -9,9 +9,10 @@ import {
 } from "../../hooks/useFlashcards";
 import { flashcardsApi } from "../../api";
 import type { Flashcard } from "../../types";
-import { Loader2, BookOpen } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import DeckItem from "./DeckItem";
+import { Spinner } from "../ui/spinner";
 
 interface DecksProps {
   onStartStudy: (flashcards: Flashcard[]) => void;
@@ -95,10 +96,7 @@ export default function Decks({ onStartStudy }: DecksProps) {
 
         <CardContent>
           {isLoadingDecks ? (
-            <div className="flex flex-col items-center py-10 text-muted-foreground">
-              <Loader2 className="animate-spin h-8 w-8 mb-3" />
-              <p className="text-sm">Carregando decks...</p>
-            </div>
+            <Spinner size="lg" text="Carregando decks..." className="py-10" />
           ) : decks.length === 0 ? (
             <div className="text-center py-10">
               <BookOpen className="h-10 w-10 text-muted-foreground mx-auto mb-3" />

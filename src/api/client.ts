@@ -3,6 +3,18 @@ import { getSessionId } from '../lib/firebase/session';
 
 const API_BASE_URL = import.meta.env.VITE_LINK_API;
 
+/**
+ * Dispara eventos customizados para controlar o spinner global
+ * O LoadingContext escuta esses eventos
+ */
+function startLoading() {
+  window.dispatchEvent(new CustomEvent('api-loading-start'));
+}
+
+function stopLoading() {
+  window.dispatchEvent(new CustomEvent('api-loading-stop'));
+}
+
 export class ApiError extends Error {
   status: number;
   
@@ -60,6 +72,7 @@ export async function apiRequest<T>(
   }
 
   try {
+    startLoading();
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
     // ✅ Detecta sessão inválida
@@ -67,14 +80,13 @@ export async function apiRequest<T>(
     if (sessionInvalid === 'true') {
       // Dispara evento customizado para o AuthContext capturar
       window.dispatchEvent(new CustomEvent('session-invalid'));
-      throw new ApiError(401, 'Sessão inválida', {
-        message: 'Outro dispositivo fez login nesta conta',
-      });
+      throw new ApiError(401, 'Sessão inválida: Outro dispositivo fez login nesta conta');
     }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new ApiError(response.status, response.statusText, errorData);
+      const errorMessage = errorData.message || response.statusText || 'Erro na requisição';
+      throw new ApiError(response.status, errorMessage);
     }
 
     // Se resposta for 204 No Content, retorna objeto vazio
@@ -86,8 +98,11 @@ export async function apiRequest<T>(
       await logout()
     }
 
-    return await response.json();
+    const result = await response.json();
+    stopLoading();
+    return result;
   } catch (error) {
+    stopLoading();
     if (error instanceof ApiError) {
       console.log('401 que pena')
       throw error;
@@ -112,16 +127,23 @@ export async function apiGet<T = unknown>(endpoint: string): Promise<T> {
   }  
   const url = `${API_BASE_URL}${endpoint}`;
   
-  const res = await fetch(url, {
-    headers,
-    credentials: 'include',
-  });
+  try {
+    startLoading();
+    const res = await fetch(url, {
+      headers,
+      credentials: 'include',
+    });
 
-  if (res.status === 401){
-    await logout()
+    if (res.status === 401){
+      await logout()
+    }
+
+    await throwIfResNotOk(res);
+    const result = await res.json();
+    stopLoading();
+    return result;
+  } catch (error) {
+    stopLoading();
+    throw error;
   }
-
-
-  await throwIfResNotOk(res);
-  return res.json();
 }

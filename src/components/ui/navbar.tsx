@@ -2,7 +2,7 @@
 import { Button } from "./button";
 import { ThemeToggle } from "../ThemeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "./sheet"; 
-import { Brain, BarChart3, LogOut, Menu, Home, Settings, CircleArrowOutDownLeftIcon } from "lucide-react";
+import { Brain, BarChart3, LogOut, Menu, Home, Settings, CircleArrowOutDownLeftIcon, Crown } from "lucide-react";
 import React, { useState } from "react";
 
 interface SidebarProps {
@@ -12,6 +12,7 @@ interface SidebarProps {
   onNavigateToAnalytics: () => void;
   onNavigateToHome: () => void;
   onNavigateToSettings: () => void;
+  onNavigateToPlans: () => void;
 }
 
 // Navegação
@@ -19,6 +20,7 @@ const navigationItems = [
   { name: "Início", icon: Home, action: 'onNavigateToHome', dataTestId: 'sidebar-link-home' },
   { name: "Revisão Diária", icon: CircleArrowOutDownLeftIcon, action: 'onNavigateToReviewMode', dataTestId: 'sidebar-link-reviewMode' },
   { name: "Analytics", icon: BarChart3, action: 'onNavigateToAnalytics', dataTestId: 'sidebar-link-analytics' },
+  { name: "Planos", icon: Crown, action: 'onNavigateToPlans', dataTestId: 'sidebar-link-plans' },
   { name: "Configurações", icon: Settings, action: 'onNavigateToSettings', dataTestId: 'sidebar-link-settings' },
   
 ];
@@ -50,13 +52,15 @@ export default function Sidebar({
   onNavigateToReviewMode,
   onNavigateToAnalytics, 
   onNavigateToHome,
-  onNavigateToSettings
+  onNavigateToSettings,
+  onNavigateToPlans
 }: SidebarProps) {
   const actionsMap = {
     onNavigateToHome,
     onNavigateToReviewMode,
     onNavigateToAnalytics,
-    onNavigateToSettings
+    onNavigateToSettings,
+    onNavigateToPlans
   };
 
   // Estado para o item ativo
@@ -128,8 +132,20 @@ export default function Sidebar({
           <h1 className="text-lg font-bold text-foreground">MemorizeMy</h1>
         </div>
 
-        {/* Botões Tema e Menu */}
+        {/* Botões Tema, Planos e Menu */}
         <div className="flex items-center space-x-2">
+          {/* Botão Planos destacado - sempre visível */}
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onNavigateToPlans}
+            className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 hidden sm:flex items-center gap-2"
+            data-testid="navbar-button-plans"
+          >
+            <Crown className="h-4 w-4" />
+            <span>Planos</span>
+          </Button>
+          
           <ThemeToggle />
           <Sheet>
             <SheetTrigger asChild>
