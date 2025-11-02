@@ -1,4 +1,4 @@
-import { Switch, Route, Redirect,useLocation } from "wouter";
+import { Switch, Route, Redirect, useLocation } from "wouter";
 import Home from "../pages/Home/index";
 import NotFound from "../pages/not-found";
 import Navbar from "../components/ui/navbar";
@@ -9,7 +9,8 @@ import PlansPage from "../pages/Plans/PlansPage";
 
 export function AppRouter() {
   const { user, logoutUser, loading } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen text-gray-500">
@@ -24,22 +25,25 @@ export function AppRouter() {
   const navigateToReviewMode = () => setLocation("/reviewMode");
   const navigateToPlans = () => setLocation("/plans");
 
+  // Renderizar navbar apenas quando user existe
+  // O Home component irá gerenciar se mostra AuthScreen ou não
+  const shouldShowNavbar = !!user;
 
   return (
     <>
-      {user && 
+      {shouldShowNavbar && (
         <Navbar 
-            user={user} 
-            onLogout={logoutUser} 
-            onNavigateToAnalytics={navigateToAnalytics} 
-            onNavigateToReviewMode={navigateToReviewMode}
-            onNavigateToHome={navigateToHome} 
-            onNavigateToSettings={navigateToSettings}
-            onNavigateToPlans={navigateToPlans}
-        />}
+          user={user} 
+          onLogout={logoutUser} 
+          onNavigateToAnalytics={navigateToAnalytics} 
+          onNavigateToReviewMode={navigateToReviewMode}
+          onNavigateToHome={navigateToHome} 
+          onNavigateToSettings={navigateToSettings}
+          onNavigateToPlans={navigateToPlans}
+        />
+      )}
 
       <Switch>
-      
         <Route path="/" component={Home} />
         <Route path="/plans" component={PlansPage} />
         <Route path="/analytics" component={AnalyticsPage}/>

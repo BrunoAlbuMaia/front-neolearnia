@@ -4,6 +4,7 @@ import { Brain } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
+import logo_mymemorize from "../../assets/logo_mymemorize.png";
 
 export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => void }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -25,22 +26,35 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
         className="w-full max-w-sm sm:max-w-md backdrop-blur-xl bg-white/80 dark:bg-gray-900/60 shadow-2xl rounded-2xl p-6 sm:p-8 space-y-6 relative z-10"
       >
         {/* Branding */}
-        <div className="text-center">
+        <div className="text-center mt-6">
           <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 120 }}
-            className="mx-auto h-14 w-14 sm:h-16 sm:w-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg mb-3 sm:mb-4"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1.15, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 80, damping: 8 }}
+            className="mx-auto relative flex items-center justify-center mb-6"
           >
-            <Brain className="text-white h-7 w-7 sm:h-8 sm:w-8" />
+            {/* Glow pulsante por trás da logo */}
+            <div className="absolute w-64 h-64 sm:w-44 sm:h-44 bg-indigo-500/30 blur-3xl rounded-full animate-pulse" />
+
+            {/* Logo em destaque */}
+            <img
+              src={logo_mymemorize}
+              alt="logo_mymemorize"
+              className="relative w-48 h-48 sm:w-32 sm:h-32 object-contain drop-shadow-[0_0_25px_rgba(99,102,241,0.6)] transition-transform duration-500 hover:scale-110"
+            />
           </motion.div>
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-gray-800 dark:text-white">
-            Memorize<span className="text-indigo-500">My</span>
+
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+            <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+              My<span className="text-indigo-500">Memorize</span>
+            </span>
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+
+          <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 mt-3">
             Flashcards inteligentes com IA
           </p>
         </div>
+
 
         {/* Tabs */}
         <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 text-sm">

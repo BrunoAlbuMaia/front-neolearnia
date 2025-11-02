@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { onAuthChange, logout } from "../../lib/firebase/auth";
+import { useAuth } from "../../context/AuthContext";
 import AuthScreen from "../../components/Auth/AuthScreen";
 import Dashboard from "../../components/Dashboard";
 import { AnalyticsPage } from "../../components/AnalyticsPage";
@@ -9,56 +9,67 @@ import { useToast } from "../../hooks/use-toast";
 import { StudyPage } from "./StudyPage";
 import { useUser } from "../../hooks/useUser";
 import OnboardingScreen from "../../components/Auth/Onboarding/OnboardingScreen";
+import { Spinner } from "../../components/ui/spinner";
+
 type Screen = 'auth' | 'dashboard' | 'study' | 'analytics' | 'reviewMode' | 'onboarding';
 
 export default function Home() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('auth');
-  const [user, setUser] = useState<any>(null);
+  const { user: authUser, loading: authLoading, logoutUser } = useAuth();
+  const [currentScreen, setCurrentScreen] = useState<Screen | null>(null);
   const [studyFlashcards, setStudyFlashcards] = useState<Flashcard[]>([]);
   const { toast } = useToast();
-  const { userState, isLoading: userLoading } = useUser()
+  const { userState, isLoading: userLoading } = useUser();
 
-   useEffect(() => {
-    const unsubscribe = onAuthChange((user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-        setCurrentScreen('auth');
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
+  // Determina o screen inicial baseado no estado do AuthContext
   useEffect(() => {
-    if (!user) return;
+    // Aguarda o carregamento do AuthContext antes de decidir
+    if (authLoading) {
+      return;
+    }
+
+    // Se não há usuário, mostra tela de auth
+    if (!authUser) {
+      setCurrentScreen('auth');
+      return;
+    }
+
+    // Se há usuário mas ainda está carregando userState, aguarda
+    if (userLoading) {
+      return;
+    }
+
+    // Processa o userState para determinar a tela
     const parsedUserState = Array.isArray(userState)
-    ? {
-        id: userState[0],
-        user_id: userState[1],
-        focus_area: userState[2],
-        learning_style: userState[3],
-        ai_level: userState[4],
-        motivation: userState[5],
-        preferred_schedule: userState[6],
-        created_at: userState[7],
-        has_onboarded: true // padrão quando já existe user_state
-      }
-    : userState;
-    
-    // ✅ Quando o estado do usuário é carregado
+      ? {
+          id: userState[0],
+          user_id: userState[1],
+          focus_area: userState[2],
+          learning_style: userState[3],
+          ai_level: userState[4],
+          motivation: userState[5],
+          preferred_schedule: userState[6],
+          created_at: userState[7],
+          has_onboarded: true
+        }
+      : userState;
+
     if (parsedUserState) {
       if (!parsedUserState.has_onboarded) {
         setCurrentScreen('onboarding');
       } else {
         setCurrentScreen('dashboard');
       }
+    } else {
+      // Se não há userState ainda, mostra dashboard (assumindo que será carregado)
+      setCurrentScreen('dashboard');
     }
-  }, [user, userState]);
+  }, [authUser, authLoading, userState, userLoading]);
 
-
-  const handleAuthSuccess = () => setCurrentScreen('dashboard');
+  const handleAuthSuccess = () => {
+    // Após login bem-sucedido, o AuthContext atualizará e o useEffect acima determinará a tela correta
+    // Por enquanto, forçamos dashboard (será ajustado pelo useEffect baseado no userState)
+    setCurrentScreen('dashboard');
+  };
   
   const handleStartStudy = (flashcards: Flashcard[]) => {
     setStudyFlashcards(flashcards);
@@ -70,7 +81,7 @@ export default function Home() {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await logoutUser();
       toast({
         title: "Logout realizado",
         description: "Até logo!",
@@ -105,7 +116,7 @@ export default function Home() {
       default:
         return (
           <Dashboard 
-            user={user}
+            user={authUser}
             onLogout={handleLogout}
             onStartStudy={handleStartStudy}
             onNavigateToAnalytics={handleNavigateToAnalytics}
@@ -113,6 +124,15 @@ export default function Home() {
         );
     }
   };
+
+  // Mostra loading enquanto AuthContext está carregando ou determinando a tela inicial
+  if (authLoading || currentScreen === null) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spinner size="lg" text="Carregando..." />
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">

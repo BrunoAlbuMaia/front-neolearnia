@@ -4,6 +4,7 @@ import { ThemeToggle } from "../ThemeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "./sheet"; 
 import { Brain, BarChart3, LogOut, Menu, Home, Settings, CircleArrowOutDownLeftIcon, Crown } from "lucide-react";
 import React, { useState } from "react";
+import logo_mymemorize from "../../assets/logo_mymemorize.png";
 
 interface SidebarProps {
   user: any;
@@ -69,12 +70,17 @@ export default function Sidebar({
   const sidebarContent = (
     <div className="flex flex-col h-full p-4">
       {/* Logo */}
-      <div className="flex items-center space-x-3 mb-6 px-2">
-        <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-          <Brain className="text-primary-foreground text-sm" />
-        </div>
-        <h1 className="text-xl font-bold text-foreground">MemorizeMy</h1>
+      <div className="flex flex-col items-center mb-8 px-2">
+      <img
+            src={logo_mymemorize}
+            alt="logo_mymemorize"
+            className="w-32 h-32 drop-shadow-md transition-transform duration-300 hover:scale-105"
+          />
+        <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-foreground">
+          MemorizeMy
+        </h1>
       </div>
+
 
       {/* Navegação */}
       <div className="flex flex-col space-y-1 flex-grow">
@@ -125,12 +131,25 @@ export default function Sidebar({
       {/* Navbar Superior */}
       <header className="bg-card border-b border-border p-2 flex items-center justify-between sticky top-0 z-50 shadow-sm" data-testid="navbar">
         {/* Logo */}
-        <div className="flex items-center space-x-2">
-          <div className="h-7 w-7 bg-primary rounded-lg flex items-center justify-center">
-            <Brain className="text-primary-foreground text-sm" />
-          </div>
-          <h1 className="text-lg font-bold text-foreground">MemorizeMy</h1>
-        </div>
+<div className="flex items-center space-x-3 group">
+  {/* Container com leve brilho */}
+  <div className="relative flex items-center justify-center">
+    {/* Glow por trás */}
+    <div className="absolute w-10 h-10 bg-indigo-500/30 blur-md rounded-lg group-hover:blur-lg transition-all duration-300" />
+    
+    {/* Logo */}
+    <img
+      src={logo_mymemorize}
+      alt="logo_mymemorize"
+      className="relative w-12 h-12 object-contain drop-shadow-[0_0_10px_rgba(99,102,241,0.6)] transition-transform duration-300 group-hover:scale-110"
+    />
+  </div>
+
+  {/* Nome com destaque visual */}
+  <h1 className="text-xl font-extrabold tracking-tight text-foreground bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+    MemorizeMy
+  </h1>
+</div>
 
         {/* Botões Tema, Planos e Menu */}
         <div className="flex items-center space-x-2">
