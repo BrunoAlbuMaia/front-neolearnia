@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { AnalyticsPage } from "../pages/Home/AnalyticsPage";
 import { ReviewModePage } from "../pages/Home/ReviewModePage";
 import PlansPage from "../pages/Plans/PlansPage";
+import { DashboardPage } from "../pages/Dashboard/DashboardPage";
 
 export function AppRouter() {
   const { user, logoutUser, loading } = useAuth();
@@ -20,7 +21,7 @@ export function AppRouter() {
   }
 
   const navigateToHome = () => setLocation("/");
-  const navigateToAnalytics = () => setLocation("/analytics");
+  const navigateToDashboard = () => setLocation("/dashboard");
   const navigateToSettings = () => setLocation("/settings");
   const navigateToReviewMode = () => setLocation("/reviewMode");
   const navigateToPlans = () => setLocation("/plans");
@@ -35,7 +36,7 @@ export function AppRouter() {
         <Navbar 
           user={user} 
           onLogout={logoutUser} 
-          onNavigateToAnalytics={navigateToAnalytics} 
+          onNavigateToDashboard={navigateToDashboard} 
           onNavigateToReviewMode={navigateToReviewMode}
           onNavigateToHome={navigateToHome} 
           onNavigateToSettings={navigateToSettings}
@@ -47,6 +48,7 @@ export function AppRouter() {
         <Route path="/" component={Home} />
         <Route path="/plans" component={PlansPage} />
         <Route path="/analytics" component={AnalyticsPage}/>
+        <Route path="/dashboard" component={DashboardPage}/>
         <Route path="/reviewMode" component={ReviewModePage}/>
         <Route component={NotFound} />
       </Switch>

@@ -107,7 +107,7 @@ export default function Decks({ onStartStudy }: DecksProps) {
       // Adicionar cor do deck aos flashcards se disponível
       const flashcardsWithColor = flashcards.map(card => ({
         ...card,
-        deckColor: deck?.color || "#3B82F6" // Cor padrão se não houver
+        color: deck?.color || "#3B82F6" // Cor padrão se não houver
       }));
       
       onStartStudy(flashcardsWithColor);

@@ -10,7 +10,7 @@ interface SidebarProps {
   user: any;
   onLogout: () => void;
   onNavigateToReviewMode:() => void;
-  onNavigateToAnalytics: () => void;
+  onNavigateToDashboard: () => void;
   onNavigateToHome: () => void;
   onNavigateToSettings: () => void;
   onNavigateToPlans: () => void;
@@ -19,8 +19,9 @@ interface SidebarProps {
 // Navegação
 const navigationItems = [
   { name: "Início", icon: Home, action: 'onNavigateToHome', dataTestId: 'sidebar-link-home' },
+  { name: "Dashboard", icon: BarChart3, action: 'onNavigateToDashboard', dataTestId: 'sidebar-link-dasboard' },
   { name: "Revisão Diária", icon: CircleArrowOutDownLeftIcon, action: 'onNavigateToReviewMode', dataTestId: 'sidebar-link-reviewMode' },
-  //{ name: "Analytics", icon: BarChart3, action: 'onNavigateToAnalytics', dataTestId: 'sidebar-link-analytics' },
+ 
   //{ name: "Planos", icon: Crown, action: 'onNavigateToPlans', dataTestId: 'sidebar-link-plans' },
   //{ name: "Configurações", icon: Settings, action: 'onNavigateToSettings', dataTestId: 'sidebar-link-settings' },
   
@@ -51,7 +52,7 @@ export default function Sidebar({
   user, 
   onLogout, 
   onNavigateToReviewMode,
-  onNavigateToAnalytics, 
+  onNavigateToDashboard, 
   onNavigateToHome,
   onNavigateToSettings,
   onNavigateToPlans
@@ -59,7 +60,7 @@ export default function Sidebar({
   const actionsMap = {
     onNavigateToHome,
     onNavigateToReviewMode,
-    onNavigateToAnalytics,
+    onNavigateToDashboard,
     onNavigateToSettings,
     onNavigateToPlans
   };

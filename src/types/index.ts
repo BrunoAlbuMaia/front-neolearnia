@@ -158,3 +158,28 @@ export interface UpdateFlashcardDifficultyPayload {
 export interface UpdateFlashcardSets {
   title:string
 }
+
+// Dashboard Types
+export interface DashboardOverview {
+  total_sessions: number;
+  total_cards_studied: number;
+  total_xp: number;
+  avg_session_duration: number; // em minutos ou segundos
+}
+
+export interface DashboardActivity {
+  day: string; // formato de data
+  sessions: number;
+}
+
+export interface DashboardDifficulty {
+  easy: number;
+  medium: number;
+  difficult: number;
+}
+
+export interface DashboardReviewSchedule {
+  due_today: number;
+  overdue: number;
+  avg_ease_factor: number;
+}

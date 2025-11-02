@@ -40,7 +40,7 @@ export default function ReviewMode() {
       const deck = decks.find((d: any) => d.title === card.name_deck);
       return {
         ...card,
-        deckColor: deck?.color || "#7CFC00", // Azul padrão
+        color: deck?.color || "#7CFC00", // Cor padrão
       };
     });
   }, [flashcards, decks]);
