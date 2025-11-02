@@ -22,14 +22,15 @@ export default function Home() {
 
   // Determina o screen inicial baseado no estado do AuthContext
   useEffect(() => {
-    // Aguarda o carregamento do AuthContext antes de decidir
-    if (authLoading) {
+    // Se não há usuário, mostra tela de auth imediatamente (mesmo durante loading)
+    // Isso evita tela preta durante logout
+    if (!authUser) {
+      setCurrentScreen('auth');
       return;
     }
 
-    // Se não há usuário, mostra tela de auth
-    if (!authUser) {
-      setCurrentScreen('auth');
+    // Aguarda o carregamento do AuthContext antes de decidir para usuários logados
+    if (authLoading) {
       return;
     }
 
@@ -125,13 +126,19 @@ export default function Home() {
     }
   };
 
-  // Mostra loading enquanto AuthContext está carregando ou determinando a tela inicial
-  if (authLoading || currentScreen === null) {
+  // Mostra loading apenas se há usuário mas ainda está carregando
+  // Se não há usuário, sempre mostra auth (não mostra loading)
+  if (authUser && (authLoading || currentScreen === null)) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Spinner size="lg" text="Carregando..." />
       </div>
     );
+  }
+
+  // Se não há usuário mas currentScreen ainda não foi definido, mostrar auth
+  if (!authUser && currentScreen === null) {
+    return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
   }
 
   return (

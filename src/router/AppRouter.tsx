@@ -1,4 +1,5 @@
-import { Switch, Route, Redirect, useLocation } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
+import { useEffect } from "react";
 import Home from "../pages/Home/index";
 import NotFound from "../pages/not-found";
 import Navbar from "../components/ui/navbar";
@@ -12,6 +13,21 @@ export function AppRouter() {
   const { user, logoutUser, loading } = useAuth();
   const [location, setLocation] = useLocation();
   
+  // Se não há usuário, sempre mostrar a tela de login (Home)
+  // Isso deve acontecer antes do check de loading para evitar tela preta durante logout
+  useEffect(() => {
+    if (!user && location !== "/") {
+      setLocation("/");
+    }
+  }, [user, location, setLocation]);
+
+  // Se não há usuário, mostrar apenas a tela de login (Home)
+  // Mesmo durante loading, se não há user, mostramos o Home que tratará o loading internamente
+  if (!user) {
+    return <Home />;
+  }
+
+  // Mostrar loading apenas se há user (não durante logout)
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen text-gray-500">
