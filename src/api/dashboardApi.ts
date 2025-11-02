@@ -4,6 +4,7 @@ import type {
   DashboardActivity,
   DashboardDifficulty,
   DashboardReviewSchedule,
+  DashboardSpeedAnalysis,
 } from '../types';
 
 export const dashboardApi = {
@@ -18,5 +19,8 @@ export const dashboardApi = {
 
   getReviewSchedule: () =>
     apiRequest<DashboardReviewSchedule>('GET','/api/dashboard/review_schedule'),
+
+  getSpeedAnalysis: () =>
+    apiRequest<DashboardSpeedAnalysis>('GET', '/api/dashboard/speed_analysis'),
 };
 

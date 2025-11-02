@@ -183,3 +183,17 @@ export interface DashboardReviewSchedule {
   overdue: number;
   avg_ease_factor: number;
 }
+
+export interface SpeedAnalysisCard {
+  flashcard_id: string;
+  title?: string;
+  question: string;
+  answer: string;
+  avg_time_seconds: number;
+  total_reviews: number;
+}
+
+export interface DashboardSpeedAnalysis {
+  slowest: SpeedAnalysisCard[];
+  fastest: SpeedAnalysisCard[];
+}

@@ -5,6 +5,7 @@ import type {
   DashboardActivity,
   DashboardDifficulty,
   DashboardReviewSchedule,
+  DashboardSpeedAnalysis,
 } from "../types";
 
 const QUERY_KEYS = {
@@ -12,6 +13,7 @@ const QUERY_KEYS = {
   activity: ["dashboard", "activity"] as const,
   difficulty: ["dashboard", "difficulty"] as const,
   reviewSchedule: ["dashboard", "review_schedule"] as const,
+  speedAnalysis: ["dashboard", "speed_analysis"] as const,
 };
 
 export function useDashboardOverview() {
@@ -39,6 +41,13 @@ export function useDashboardReviewSchedule() {
   return useQuery<DashboardReviewSchedule>({
     queryKey: QUERY_KEYS.reviewSchedule,
     queryFn: () => dashboardApi.getReviewSchedule(),
+  });
+}
+
+export function useDashboardSpeedAnalysis() {
+  return useQuery<DashboardSpeedAnalysis>({
+    queryKey: QUERY_KEYS.speedAnalysis,
+    queryFn: () => dashboardApi.getSpeedAnalysis(),
   });
 }
 

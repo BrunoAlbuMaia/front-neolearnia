@@ -4,6 +4,7 @@ import {
   useDashboardActivity,
   useDashboardDifficulty,
   useDashboardReviewSchedule,
+  useDashboardSpeedAnalysis,
 } from "../../hooks/useDashboard";
 import { Spinner } from "../../components/ui/spinner";
 import { 
@@ -14,7 +15,10 @@ import {
   Calendar,
   Target,
   AlertCircle,
-  BarChart3
+  BarChart3,
+  Turtle,
+  Zap,
+  RotateCcw
 } from "lucide-react";
 import {
   LineChart,
@@ -46,8 +50,9 @@ export function DashboardPage() {
   const { data: activity, isLoading: loadingActivity } = useDashboardActivity();
   const { data: difficulty, isLoading: loadingDifficulty } = useDashboardDifficulty();
   const { data: reviewSchedule, isLoading: loadingReviewSchedule } = useDashboardReviewSchedule();
+  const { data: speedAnalysis, isLoading: loadingSpeedAnalysis } = useDashboardSpeedAnalysis();
 
-  const isLoading = loadingOverview || loadingActivity || loadingDifficulty || loadingReviewSchedule;
+  const isLoading = loadingOverview || loadingActivity || loadingDifficulty || loadingReviewSchedule || loadingSpeedAnalysis;
 
   // Preparar dados para gráfico de pizza
   const difficultyData = difficulty
@@ -273,6 +278,109 @@ export function DashboardPage() {
                   </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Análise de Velocidade */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Cards Mais Lentos */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Turtle className="h-5 w-5 text-orange-500" />
+                Cards Mais Lentos
+              </CardTitle>
+              <CardDescription>
+                Flashcards que você demora mais para responder
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {speedAnalysis?.slowest && speedAnalysis.slowest.length > 0 ? (
+                <div className="space-y-4">
+                  {speedAnalysis.slowest.map((card) => (
+                    <Card key={card.flashcard_id} className="border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-950/20">
+                      <CardContent className="pt-4">
+                        {card.title && (
+                          <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-1">
+                            {card.title}
+                          </p>
+                        )}
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <p className="text-sm font-medium text-foreground flex-1">
+                            {card.question}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3 w-3" />
+                            <span>{(card.avg_time_seconds).toFixed(1)}s médio</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <RotateCcw className="h-3 w-3" />
+                            <span>{card.total_reviews} revisões</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Turtle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Nenhum dado de velocidade disponível</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Cards Mais Rápidos */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-green-500" />
+                Cards Mais Rápidos
+              </CardTitle>
+              <CardDescription>
+                Flashcards que você responde mais rapidamente
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {speedAnalysis?.fastest && speedAnalysis.fastest.length > 0 ? (
+                <div className="space-y-4">
+                  {speedAnalysis.fastest.map((card) => (
+                    <Card key={card.flashcard_id} className="border-green-200 dark:border-green-900 bg-green-50/50 dark:bg-green-950/20">
+                      <CardContent className="pt-4">
+                        {card.title && (
+                          <p className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">
+                            {card.title}
+                          </p>
+                        )}
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <p className="text-sm font-medium text-foreground flex-1">
+                            {card.question}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3 w-3" />
+                            <span>{(card.avg_time_seconds).toFixed(1)}s médio</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <RotateCcw className="h-3 w-3" />
+                            <span>{card.total_reviews} revisões</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Zap className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Nenhum dado de velocidade disponível</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
