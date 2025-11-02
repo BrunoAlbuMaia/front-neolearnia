@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { useToast } from "../../hooks/use-toast";
 import {
   useFlashcardSets,
@@ -8,15 +9,18 @@ import {
   useDeleteFlashcardSet,
 } from "../../hooks/useFlashcards";
 import { flashcardsApi } from "../../api";
+import type { FlashcardSet } from "../../types";
 import type { Flashcard } from "../../types";
-import { BookOpen } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { BookOpen, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import DeckItem from "./DeckItem";
 import { Spinner } from "../ui/spinner";
 
 interface DecksProps {
   onStartStudy: (flashcards: Flashcard[]) => void;
 }
+
+const DECKS_PER_PAGE = 5;
 
 export default function Decks({ onStartStudy }: DecksProps) {
   const { toast } = useToast();
@@ -26,6 +30,43 @@ export default function Decks({ onStartStudy }: DecksProps) {
   
   const [editingDeckId, setEditingDeckId] = useState<string | null>(null);
   const [editedTitle, setEditedTitle] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Filtrar decks por nome
+  const filteredDecks = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return decks;
+    }
+    return decks.filter((deck: any) =>
+      deck.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [decks, searchQuery]);
+
+  // Calcular paginação
+  const totalPages = Math.ceil(filteredDecks.length / DECKS_PER_PAGE);
+  const startIndex = (currentPage - 1) * DECKS_PER_PAGE;
+  const endIndex = startIndex + DECKS_PER_PAGE;
+  const paginatedDecks = filteredDecks.slice(startIndex, endIndex);
+
+  // Resetar página quando a pesquisa mudar
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setCurrentPage(1);
+  };
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
 
   const handleEditDeck = (deckId: string, currentTitle: string) => {
     setEditingDeckId(deckId);
@@ -48,7 +89,12 @@ export default function Decks({ onStartStudy }: DecksProps) {
 
   const handleStudyDeck = async (deckId: string) => {
     try {
-      const flashcards = await flashcardsApi.getFlashcardsBySetId(deckId);
+      // Buscar flashcards e informações do deck (para pegar a cor)
+      const [flashcards, deck] = await Promise.all([
+        flashcardsApi.getFlashcardsBySetId(deckId),
+        decks.find((d: FlashcardSet) => d.id === deckId)
+      ]);
+      
       if (flashcards.length === 0) {
         toast({
           title: "Nenhum flashcard encontrado",
@@ -57,7 +103,14 @@ export default function Decks({ onStartStudy }: DecksProps) {
         });
         return;
       }
-      onStartStudy(flashcards);
+      
+      // Adicionar cor do deck aos flashcards se disponível
+      const flashcardsWithColor = flashcards.map(card => ({
+        ...card,
+        deckColor: deck?.color || "#3B82F6" // Cor padrão se não houver
+      }));
+      
+      onStartStudy(flashcardsWithColor);
     } catch {
       toast({
         title: "Erro ao carregar flashcards",
@@ -82,19 +135,51 @@ export default function Decks({ onStartStudy }: DecksProps) {
 
 
   return (
-    <div className="space-y-5">
-      <Card className="border-border/50 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
+    <div className="space-y-5 w-full">
+      <Card className="border-border/50 shadow-sm w-full">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <CardTitle className="flex items-center text-lg font-semibold">
             <BookOpen className="text-primary mr-2 h-5 w-5" />
             Seus Decks
           </CardTitle>
-          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-            {decks.length} decks
-          </span>
+          <div className="flex items-center gap-2">
+            {searchQuery && (
+              <span className="text-xs text-muted-foreground">
+                {filteredDecks.length} de {decks.length}
+              </span>
+            )}
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+              {decks.length} {decks.length === 1 ? 'deck' : 'decks'}
+            </span>
+          </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Barra de Pesquisa */}
+          {!isLoadingDecks && decks.length > 0 && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Pesquisar decks por nome..."
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-10 pr-10"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7"
+                  onClick={handleClearSearch}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Lista de Decks */}
           {isLoadingDecks ? (
             <Spinner size="lg" text="Carregando decks..." className="py-10" />
           ) : decks.length === 0 ? (
@@ -107,26 +192,74 @@ export default function Decks({ onStartStudy }: DecksProps) {
                 Cole um conteúdo acima para criar seu primeiro.
               </p>
             </div>
-          ) : (
-            <div className="space-y-2">
-              <AnimatePresence>
-                {decks.map((deck) => (
-                  <DeckItem
-                    key={deck.id}
-                    deck={deck}
-                    isEditing={editingDeckId === deck.id}
-                    editedTitle={editedTitle}
-                    setEditedTitle={setEditedTitle}
-                    onSave={() => handleSaveEdit(deck.id)}
-                    onCancel={() => setEditingDeckId(null)}
-                    onEdit={() => handleEditDeck(deck.id, deck.title)}
-                    onDelete={() => handleDeleteDeck(deck.id)}
-                    onStudy={() => handleStudyDeck(deck.id)}
-                    isSaving={updateDeck.isLoading}
-                  />
-                ))}
-              </AnimatePresence>
+          ) : filteredDecks.length === 0 ? (
+            <div className="text-center py-10">
+              <Search className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground mb-2">
+                Nenhum deck encontrado
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Tente pesquisar com outros termos.
+              </p>
             </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <AnimatePresence mode="popLayout">
+                  {paginatedDecks.map((deck) => (
+                    <DeckItem
+                      key={deck.id}
+                      deck={deck}
+                      isEditing={editingDeckId === deck.id}
+                      editedTitle={editedTitle}
+                      setEditedTitle={setEditedTitle}
+                      onSave={() => handleSaveEdit(deck.id)}
+                      onCancel={() => setEditingDeckId(null)}
+                      onEdit={() => handleEditDeck(deck.id, deck.title)}
+                      onDelete={() => handleDeleteDeck(deck.id)}
+                      onStudy={() => handleStudyDeck(deck.id)}
+                      isSaving={updateDeck.isPending}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+
+              {/* Paginação */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Mostrando {startIndex + 1} - {Math.min(endIndex, filteredDecks.length)} de {filteredDecks.length}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className="gap-1"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      <span className="hidden sm:inline">Anterior</span>
+                    </Button>
+                    <div className="flex items-center gap-1 px-2">
+                      <span className="text-sm text-muted-foreground">
+                        Página {currentPage} de {totalPages}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className="gap-1"
+                    >
+                      <span className="hidden sm:inline">Próxima</span>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

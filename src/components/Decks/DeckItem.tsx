@@ -35,10 +35,10 @@ export default function DeckItem({
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
-      whileHover={{ scale: 1.01 }}
+      whileHover={{ scale: 1.005 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 220, damping: 18 }}
-      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border rounded-lg bg-card/40 hover:bg-muted/30 transition-colors"
+      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border border-border/50 rounded-lg bg-card hover:bg-muted/50 hover:border-primary/20 transition-all shadow-sm"
     >
       <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
         {isEditing ? (
@@ -71,17 +71,21 @@ export default function DeckItem({
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col">
-            <h3 className="font-medium text-sm text-foreground">{deck.title}</h3>
+          <div className="flex flex-col flex-1 min-w-0">
+            <h3 className="font-semibold text-sm text-foreground truncate">{deck.title}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Criado em {new Date(deck.created_at || "").toLocaleDateString()}
+              Criado em {new Date(deck.created_at || "").toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+              })}
             </p>
           </div>
         )}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button size="sm" className="h-8" onClick={onStudy}>
+        <Button size="sm" className="h-8 bg-accent text-accent-foreground hover:bg-accent/90" onClick={onStudy}>
           <Play className="h-4 w-4 mr-1" /> Estudar
         </Button>
 

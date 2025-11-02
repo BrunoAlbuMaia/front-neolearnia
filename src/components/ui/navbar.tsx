@@ -20,9 +20,9 @@ interface SidebarProps {
 const navigationItems = [
   { name: "Início", icon: Home, action: 'onNavigateToHome', dataTestId: 'sidebar-link-home' },
   { name: "Revisão Diária", icon: CircleArrowOutDownLeftIcon, action: 'onNavigateToReviewMode', dataTestId: 'sidebar-link-reviewMode' },
-  { name: "Analytics", icon: BarChart3, action: 'onNavigateToAnalytics', dataTestId: 'sidebar-link-analytics' },
-  { name: "Planos", icon: Crown, action: 'onNavigateToPlans', dataTestId: 'sidebar-link-plans' },
-  { name: "Configurações", icon: Settings, action: 'onNavigateToSettings', dataTestId: 'sidebar-link-settings' },
+  //{ name: "Analytics", icon: BarChart3, action: 'onNavigateToAnalytics', dataTestId: 'sidebar-link-analytics' },
+  //{ name: "Planos", icon: Crown, action: 'onNavigateToPlans', dataTestId: 'sidebar-link-plans' },
+  //{ name: "Configurações", icon: Settings, action: 'onNavigateToSettings', dataTestId: 'sidebar-link-settings' },
   
 ];
 
@@ -76,7 +76,7 @@ export default function Sidebar({
             alt="logo_mymemorize"
             className="w-32 h-32 drop-shadow-md transition-transform duration-300 hover:scale-105"
           />
-        <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-foreground">
+        <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-foreground  text-accent">
           MemorizeMy
         </h1>
       </div>
@@ -130,26 +130,26 @@ export default function Sidebar({
     <>
       {/* Navbar Superior */}
       <header className="bg-card border-b border-border p-2 flex items-center justify-between sticky top-0 z-50 shadow-sm" data-testid="navbar">
-        {/* Logo */}
-<div className="flex items-center space-x-3 group">
-  {/* Container com leve brilho */}
-  <div className="relative flex items-center justify-center">
-    {/* Glow por trás */}
-    <div className="absolute w-10 h-10 bg-indigo-500/30 blur-md rounded-lg group-hover:blur-lg transition-all duration-300" />
-    
-    {/* Logo */}
-    <img
-      src={logo_mymemorize}
-      alt="logo_mymemorize"
-      className="relative w-12 h-12 object-contain drop-shadow-[0_0_10px_rgba(99,102,241,0.6)] transition-transform duration-300 group-hover:scale-110"
-    />
-  </div>
+      {/* Logo */}
+      <div className="flex items-center space-x-3 group">
+        {/* Container com leve brilho */}
+        <div className="relative flex items-center justify-center">
+          {/* Glow por trás */}
+          <div className="absolute w-10 h-10 bg-indigo-500/30 blur-md rounded-lg group-hover:blur-lg transition-all duration-300" />
+            
+            {/* Logo */}
+            <img
+              src={logo_mymemorize}
+              alt="logo_mymemorize"
+              className="relative w-12 h-12 object-contain drop-shadow-[0_0_10px_rgba(99,102,241,0.6)] transition-transform duration-300 group-hover:scale-110"
+            />
+          </div>
 
-  {/* Nome com destaque visual */}
-  <h1 className="text-xl font-extrabold tracking-tight text-foreground bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-    MemorizeMy
-  </h1>
-</div>
+          {/* Nome com destaque visual */}
+          <h1 className="text-xl font-extrabold tracking-tight text-foreground  from-indigo-500 to-purple-500 bg-clip-text text-transparent bg-accent text-accent-foreground hover:bg-accent/90">
+            MemorizeMy
+          </h1>
+        </div>
 
         {/* Botões Tema, Planos e Menu */}
         <div className="flex items-center space-x-2">
@@ -158,7 +158,7 @@ export default function Sidebar({
             variant="default"
             size="sm"
             onClick={onNavigateToPlans}
-            className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 hidden sm:flex items-center gap-2"
+            className="bg-accent from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 hidden sm:flex items-center gap-2"
             data-testid="navbar-button-plans"
           >
             <Crown className="h-4 w-4" />

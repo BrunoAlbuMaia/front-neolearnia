@@ -135,7 +135,7 @@ export default function Home() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
+    <div className="relative min-h-screen bg-background">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentScreen}
@@ -143,7 +143,7 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -15 }}
           transition={{ duration: 0.35, ease: "easeInOut" }}
-          className="absolute inset-0"
+          className="relative w-full"
         >
           {renderScreen()}
         </motion.div>

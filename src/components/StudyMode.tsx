@@ -31,6 +31,13 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
   const { toast } = useToast();
   const currentCard = flashcards[currentCardIndex];
   const progress = ((currentCardIndex + 1) / flashcards.length) * 100;
+  
+  // Pega a cor do deck do primeiro flashcard (todos do mesmo deck têm a mesma cor)
+  const deckColor = flashcards[0]?.color || "#3B82F6"; // Azul padrão
+  const cardStyle = {
+    backgroundColor: deckColor,
+    borderColor: deckColor,
+  };
 
   const {
     sessionId,
@@ -160,10 +167,13 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
             <div 
               className={`flip-card-inner relative w-full h-full transition-transform duration-600 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
             
-              <Card className="flip-card-front absolute w-full h-full backface-hidden shadow-xl">
+              <Card 
+                className="flip-card-front absolute w-full h-full backface-hidden shadow-xl"
+                style={{ borderColor: deckColor, borderWidth: '2px' }}
+              >
                 <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
-                  <div className="mb-4">
-                    <HelpCircle className="text-primary h-8 w-8" />
+                  <div className="mb-4" style={{ color: deckColor }}>
+                    <HelpCircle className="h-8 w-8" />
                   </div>
                   <h3 className="text-lg md:text-xl font-semibold text-foreground mb-4" data-testid="text-question">
                     {currentCard.question}
@@ -172,12 +182,15 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                 </CardContent>
               </Card>
               
-              <Card className="flip-card-back absolute w-full h-full backface-hidden rotate-y-180 bg-primary border-primary shadow-xl">
+              <Card 
+                className="flip-card-back absolute w-full h-full backface-hidden rotate-y-180 shadow-xl"
+                style={cardStyle}
+              >
                 <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
                   <div className="mb-4">
-                    <Lightbulb className="text-primary-foreground h-8 w-8" />
+                    <Lightbulb className="text-white h-8 w-8 drop-shadow-lg" />
                   </div>
-                  <h3 className="text-base md:text-lg font-semibold text-primary-foreground mb-4" data-testid="text-answer">
+                  <h3 className="text-base md:text-lg font-semibold text-white mb-4 drop-shadow-lg" data-testid="text-answer">
                     {currentCard.answer}
                   </h3>
                 </CardContent>

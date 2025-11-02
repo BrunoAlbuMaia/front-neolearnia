@@ -8,6 +8,7 @@ export interface Flashcard {
   created_by:string;
   updated_at?:string;
   updated_by?:string;
+  color?: string; // Cor do deck (opcional, para exibição)
 }
 export interface ReviewCard {
   flashcard_id: string;
@@ -15,6 +16,7 @@ export interface ReviewCard {
   question: string;
   answer: string;
   next_review_date: string;
+  color?: string; // Cor do deck (opcional, para exibição)
 }
 
 
@@ -65,7 +67,7 @@ export interface FlashcardSet {
   title: string;
   original_text:string;
   created_at: string;
-
+  color?: string;
 }
 
 export interface StudySession {
@@ -115,6 +117,7 @@ export interface GenerateFlashcardsPayload {
   setId?: string;
   qtdCards: number;
   title?: string;
+  color?: string;
 }
 
 export interface GenerateFlashcardsResponse {

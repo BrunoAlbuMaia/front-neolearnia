@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useReviews } from "../hooks/useReviews";
+import { useFlashcardSets } from "../hooks/useFlashcards";
 import { reviewApi } from "../api/reviewApi";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { useToast } from "../hooks/use-toast";
+import type { ReviewCard } from "../types";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -21,12 +23,35 @@ import {
 export default function ReviewMode() {
   const [, setLocation] = useLocation();
   const { data: flashcards, isLoading, error } = useReviews();
+  const { data: decks = [] } = useFlashcardSets();
   const { toast } = useToast();
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [stats, setStats] = useState({ easy: 0, medium: 0, difficult: 0 });
 
   const navigateToHome = () => setLocation("/");
+
+  // Enriquecer flashcards com a cor do deck baseado no nome
+  const flashcardsWithColor = useMemo(() => {
+    if (!flashcards || flashcards.length === 0) return [];
+    
+    return flashcards.map((card: ReviewCard) => {
+      // Buscar o deck pelo nome para pegar a cor
+      const deck = decks.find((d: any) => d.title === card.name_deck);
+      return {
+        ...card,
+        deckColor: deck?.color || "#7CFC00", // Azul padrão
+      };
+    });
+  }, [flashcards, decks]);
+
+  // Pega a cor do deck do card atual
+  const currentCard = flashcardsWithColor[currentCardIndex];
+  const deckColor = currentCard?.color || "#7CFC00";
+  const cardStyle = {
+    backgroundColor: deckColor,
+    borderColor: deckColor,
+  };
 
   useEffect(() => {
     console.log(error)
@@ -40,7 +65,7 @@ export default function ReviewMode() {
   }, [error]);
 
   if (isLoading) return <div className="p-6 text-center">Carregando revisões...</div>;
-  if (!flashcards || flashcards.length === 0)
+  if (!flashcardsWithColor || flashcardsWithColor.length === 0)
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-background to-muted px-6 text-center">
         <Card className="max-w-md w-full shadow-lg border border-border/50 p-8 animate-fade-in">
@@ -69,14 +94,14 @@ export default function ReviewMode() {
       </div>
     );
   
-  const currentCard = flashcards[currentCardIndex];
-  const progress = ((currentCardIndex + 1) / flashcards.length) * 100;
+  const progress = currentCard ? ((currentCardIndex + 1) / flashcardsWithColor.length) * 100 : 0;
 
   const handleFlip = () => setIsFlipped(!isFlipped);
 
   const handleDifficulty = async (difficulty: "easy" | "medium" | "difficult") => {
     try {
-      console.log(currentCard)
+      if (!currentCard) return;
+      
       await reviewApi.recordCardReview({
         flashcardId: currentCard.flashcard_id,
         difficulty:difficulty,
@@ -84,7 +109,7 @@ export default function ReviewMode() {
 
       setStats((prev) => ({ ...prev, [difficulty]: prev[difficulty] + 1 }));
 
-      if (currentCardIndex < flashcards.length - 1) {
+      if (currentCardIndex < flashcardsWithColor.length - 1) {
         setTimeout(() => {
           setCurrentCardIndex((i) => i + 1);
           setIsFlipped(false);
@@ -92,7 +117,7 @@ export default function ReviewMode() {
       } else {
         toast({
           title: "Revisão concluída!",
-          description: `Você revisou ${flashcards.length} flashcards.`,
+          description: `Você revisou ${flashcardsWithColor.length} flashcards.`,
         });
         navigateToHome();
       }
@@ -122,7 +147,7 @@ export default function ReviewMode() {
 
           <div className="flex items-center space-x-4">
             <span className="text-sm text-muted-foreground">
-              {currentCardIndex + 1} / {flashcards.length}
+              {currentCardIndex + 1} / {flashcardsWithColor.length}
             </span>
             <div className="w-full sm:w-32">
               <Progress value={progress} className="h-2" />
@@ -134,7 +159,7 @@ export default function ReviewMode() {
       <div className="flex-grow flex flex-col justify-center items-center px-4 py-6">
         <div className="w-full max-w-2xl text-center mb-4">
           <p className="text-sm text-muted-foreground">
-            Deck: <span className="font-medium text-foreground">{currentCard.name_deck}</span>
+            Deck: <span className="font-medium text-foreground">{currentCard?.name_deck}</span>
           </p>
         </div>
 
@@ -145,21 +170,31 @@ export default function ReviewMode() {
                 isFlipped ? "rotate-y-180" : ""
               }`}
             >
-              <Card className="flip-card-front absolute w-full h-full backface-hidden shadow-xl">
+              <Card 
+                className="flip-card-front absolute w-full h-full backface-hidden shadow-xl"
+                style={{ borderColor: deckColor, borderWidth: '2px' }}
+              >
                 <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
-                  <HelpCircle className="text-primary h-8 w-8 mb-4" />
+                  <div className="mb-4" style={{ color: deckColor }}>
+                    <HelpCircle className="h-8 w-8" />
+                  </div>
                   <h3 className="text-lg md:text-xl font-semibold text-foreground mb-4">
-                    {currentCard.question}
+                    {currentCard?.question}
                   </h3>
                   <p className="text-sm text-muted-foreground">Clique para revelar a resposta</p>
                 </CardContent>
               </Card>
 
-              <Card className="flip-card-back absolute w-full h-full backface-hidden rotate-y-180 bg-primary border-primary shadow-xl">
+              <Card 
+                className="flip-card-back absolute w-full h-full backface-hidden rotate-y-180 shadow-xl"
+                style={cardStyle}
+              >
                 <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
-                  <Lightbulb className="text-primary-foreground h-8 w-8 mb-4" />
-                  <h3 className="text-base md:text-lg font-semibold text-primary-foreground mb-4">
-                    {currentCard.answer}
+                  <div className="mb-4">
+                    <Lightbulb className="text-white h-8 w-8 drop-shadow-lg" />
+                  </div>
+                  <h3 className="text-base md:text-lg font-semibold text-white mb-4 drop-shadow-lg">
+                    {currentCard?.answer}
                   </h3>
                 </CardContent>
               </Card>
@@ -210,8 +245,8 @@ export default function ReviewMode() {
             <Button
               variant="secondary"
               size="icon"
-              onClick={() => setCurrentCardIndex((i) => Math.min(i + 1, flashcards.length - 1))}
-              disabled={currentCardIndex === flashcards.length - 1}
+              onClick={() => setCurrentCardIndex((i) => Math.min(i + 1, flashcardsWithColor.length - 1))}
+              disabled={currentCardIndex === flashcardsWithColor.length - 1}
             >
               <ChevronRight className="h-5 w-5" />
             </Button>
