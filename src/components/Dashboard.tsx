@@ -77,7 +77,7 @@ export default function Dashboard({
         onSuccess: (data) => {
           toast({
             title: "Flashcards gerados com sucesso!",
-            description: `${data.flashcards.length} flashcards foram criados para o deck "${data.flashcardSet.title}".`,
+            description: `Flashcards gerados com sucesso!`,
           });
           setStudyContent("");
           setNewDeckTitle("");
