@@ -6,6 +6,7 @@ import { useToast } from "../hooks/use-toast";
 import { useStudySession } from "../hooks/useStudySession";
 // import { useUpdateFlashcardDifficulty } from "../hooks/useFlashcards";
 import type { Flashcard } from "../types";
+import QuizCard from "./QuizCard";
 import { 
   ArrowLeft, 
   ChevronLeft, 
@@ -103,6 +104,42 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
     }, 500);
   };
 
+  const handleQuizAnswer = (isCorrect: boolean, timeSpent: number) => {
+    if (!sessionId) {
+      toast({
+        title: "Aguarde...",
+        description: "Preparando sessão de estudo.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Determina a dificuldade baseado se acertou ou errou
+    const difficulty: 'easy' | 'medium' | 'difficult' = isCorrect ? 'easy' : 'difficult';
+    
+    recordReview.mutate({
+      flashcardId: currentCard.id,
+      sessionId,
+      difficulty,
+      timeSpent
+    });
+
+    updateStats(difficulty);
+    
+    setTimeout(() => {
+      if (currentCardIndex < flashcards.length - 1) {
+        handleNext();
+      } else {
+        const completedCards = stats.easy + stats.medium + stats.difficult + 1;
+        finalizeSession(completedCards);
+        toast({
+          title: "Estudo concluído!",
+          description: `Você revisou ${completedCards} flashcards.`,
+        });
+      }
+    }, 500);
+  };
+
   const handlePrevious = () => {
     if (currentCardIndex > 0) {
       setCurrentCardIndex(currentCardIndex - 1);
@@ -163,76 +200,126 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
 
       <div className="flex-grow max-w-4xl w-full mx-auto p-4 flex flex-col justify-center">
         <div className="w-full max-w-2xl mx-auto">
-          <div className="flip-card w-full aspect-video mb-6 perspective-1000">
-            <div 
-              className={`flip-card-inner relative w-full h-full transition-transform duration-600 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
-            
-              <Card 
-                className="flip-card-front absolute w-full h-full backface-hidden shadow-xl"
-                style={{ borderColor: deckColor, borderWidth: '2px' }}
-              >
-                <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
-                  <div className="mb-4" style={{ color: deckColor }}>
-                    <HelpCircle className="h-8 w-8" />
-                  </div>
-                  <h3 className="text-lg md:text-xl font-semibold text-foreground mb-4" data-testid="text-question">
-                    {currentCard.question}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">Clique para revelar a resposta</p>
-                </CardContent>
-              </Card>
-              
-              <Card 
-                className="flip-card-back absolute w-full h-full backface-hidden rotate-y-180 shadow-xl"
-                style={cardStyle}
-              >
-                <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
-                  <div className="mb-4">
-                    <Lightbulb className="text-white h-8 w-8 drop-shadow-lg" />
-                  </div>
-                  <h3 className="text-base md:text-lg font-semibold text-white mb-4 drop-shadow-lg" data-testid="text-answer">
-                    {currentCard.answer}
-                  </h3>
-                </CardContent>
-              </Card>
+          {/* Renderiza QuizCard se for do tipo quiz, senão renderiza o card padrão */}
+          {currentCard.type === 'quiz' && currentCard.alternatives && currentCard.correct_answer ? (
+            <div className="mb-6">
+              <QuizCard
+                flashcard={currentCard}
+                deckColor={deckColor}
+                onAnswerSelected={handleQuizAnswer}
+                disabled={!sessionId || isCreatingSession || isRecordingReview}
+              />
             </div>
-          </div>
-
-          <div className="flex flex-col items-center justify-center gap-4">
-            {isFlipped && (
-              <div className="flex flex-wrap justify-center items-center gap-2">
-                <span className="text-sm font-medium text-foreground mr-2">Como foi?</span>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  disabled={!sessionId || isCreatingSession || isRecordingReview}
-                  onClick={() => handleDifficulty('difficult')}
-                  data-testid="button-difficult"
-                >
-                  <X className="mr-1 h-3 w-3" /> Difícil
-                </Button>
-                <Button
-                  className="bg-amber-500 text-white hover:bg-amber-600 disabled:bg-gray-400 disabled:hover:bg-gray-400"
-                  size="sm"
-                  disabled={!sessionId || isCreatingSession || isRecordingReview}
-                  onClick={() => handleDifficulty('medium')}
-                  data-testid="button-medium"
-                >
-                  <Minus className="mr-1 h-3 w-3" /> Médio
-                </Button>
-                <Button
-                  className="bg-emerald-500 text-white hover:bg-emerald-600 disabled:bg-gray-400 disabled:hover:bg-gray-400"
-                  size="sm"
-                  disabled={!sessionId || isCreatingSession || isRecordingReview}
-                  onClick={() => handleDifficulty('easy')}
-                  data-testid="button-easy"
-                >
-                  <Check className="mr-1 h-3 w-3" /> Fácil
-                </Button>
+          ) : (
+            <>
+              <div className="flip-card w-full aspect-video mb-6 perspective-1000">
+                <div 
+                  className={`flip-card-inner relative w-full h-full transition-transform duration-600 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+                
+                  <Card 
+                    className="flip-card-front absolute w-full h-full backface-hidden shadow-xl"
+                    style={{ borderColor: deckColor, borderWidth: '2px' }}
+                  >
+                    <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
+                      <div className="mb-4" style={{ color: deckColor }}>
+                        <HelpCircle className="h-8 w-8" />
+                      </div>
+                      <h3 className="text-lg md:text-xl font-semibold text-foreground mb-4" data-testid="text-question">
+                        {currentCard.question}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">Clique para revelar a resposta</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card 
+                    className="flip-card-back absolute w-full h-full backface-hidden rotate-y-180 shadow-xl"
+                    style={cardStyle}
+                  >
+                    <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
+                      <div className="mb-4">
+                        <Lightbulb className="text-white h-8 w-8 drop-shadow-lg" />
+                      </div>
+                      <h3 className="text-base md:text-lg font-semibold text-white mb-4 drop-shadow-lg" data-testid="text-answer">
+                        {currentCard.answer}
+                      </h3>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
-            )}
 
-            <div className="flex items-center space-x-3">
+              <div className="flex flex-col items-center justify-center gap-4">
+                {isFlipped && (
+                  <div className="flex flex-wrap justify-center items-center gap-2">
+                    <span className="text-sm font-medium text-foreground mr-2">Como foi?</span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={!sessionId || isCreatingSession || isRecordingReview}
+                      onClick={() => handleDifficulty('difficult')}
+                      data-testid="button-difficult"
+                    >
+                      <X className="mr-1 h-3 w-3" /> Difícil
+                    </Button>
+                    <Button
+                      className="bg-amber-500 text-white hover:bg-amber-600 disabled:bg-gray-400 disabled:hover:bg-gray-400"
+                      size="sm"
+                      disabled={!sessionId || isCreatingSession || isRecordingReview}
+                      onClick={() => handleDifficulty('medium')}
+                      data-testid="button-medium"
+                    >
+                      <Minus className="mr-1 h-3 w-3" /> Médio
+                    </Button>
+                    <Button
+                      className="bg-emerald-500 text-white hover:bg-emerald-600 disabled:bg-gray-400 disabled:hover:bg-gray-400"
+                      size="sm"
+                      disabled={!sessionId || isCreatingSession || isRecordingReview}
+                      onClick={() => handleDifficulty('easy')}
+                      data-testid="button-easy"
+                    >
+                      <Check className="mr-1 h-3 w-3" /> Fácil
+                    </Button>
+                  </div>
+                )}
+
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handlePrevious}
+                    disabled={currentCardIndex === 0}
+                    data-testid="button-previous"
+                    aria-label="Anterior"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  
+                  <Button
+                    onClick={handleFlip}
+                    className="px-6 min-w-[200px]"
+                    data-testid="button-flip"
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    {isFlipped ? 'Ocultar Resposta' : 'Mostrar Resposta'}
+                  </Button>
+                  
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleNext}
+                    disabled={currentCardIndex === flashcards.length - 1}
+                    data-testid="button-next"
+                    aria-label="Próximo"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Botões de navegação para modo quiz */}
+          {currentCard.type === 'quiz' && currentCard.alternatives && currentCard.correct_answer && (
+            <div className="flex items-center justify-center space-x-3 mt-6">
               <Button
                 variant="secondary"
                 size="icon"
@@ -242,15 +329,6 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                 aria-label="Anterior"
               >
                 <ChevronLeft className="h-5 w-5" />
-              </Button>
-              
-              <Button
-                onClick={handleFlip}
-                className="px-6 min-w-[200px]"
-                data-testid="button-flip"
-              >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                {isFlipped ? 'Ocultar Resposta' : 'Mostrar Resposta'}
               </Button>
               
               <Button
@@ -264,7 +342,7 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                 <ChevronRight className="h-5 w-5" />
               </Button>
             </div>
-          </div>
+          )}
 
           <div className="mt-8 grid grid-cols-3 sm:grid-cols-3 gap-4">
             <Card className="text-center">

@@ -103,7 +103,7 @@ export default function RegisterForm({ onAuthSuccess }: RegisterFormProps) {
       });
       toast({
         title: "Conta criada com sucesso!",
-        description: "Bem-vindo ao MemorizeMy 🎉",
+        description: "Bem-vindo ao MyMemorize 🎉",
       });
       onAuthSuccess();
     } catch (error: any) {

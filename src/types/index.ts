@@ -9,6 +9,15 @@ export interface Flashcard {
   updated_at?:string;
   updated_by?:string;
   color?: string; // Cor do deck (opcional, para exibição)
+  // Campos para flashcards de múltipla escolha (quiz)
+  type?: 'standard' | 'quiz'; // Tipo do flashcard
+  alternatives?: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  correct_answer?: 'A' | 'B' | 'C' | 'D'; // Resposta correta para quiz
 }
 export interface ReviewCard {
   flashcard_id: string;
@@ -68,6 +77,7 @@ export interface FlashcardSet {
   original_text:string;
   created_at: string;
   color?: string;
+  type?: 'standard' | 'quiz'; // Tipo do deck (flashcards padrão ou quizzes)
 }
 
 export interface StudySession {
@@ -118,6 +128,7 @@ export interface GenerateFlashcardsPayload {
   qtdCards: number;
   title?: string;
   color?: string;
+  cardType?: 'standard' | 'quiz'; // Tipo de flashcard a ser gerado
 }
 
 export interface GenerateFlashcardsResponse {
@@ -196,4 +207,37 @@ export interface SpeedAnalysisCard {
 export interface DashboardSpeedAnalysis {
   slowest: SpeedAnalysisCard[];
   fastest: SpeedAnalysisCard[];
+}
+
+// Quiz Types
+export interface QuizOption {
+  id: string;
+  quiz_id: string;
+  text: string;
+  is_correct: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface Quiz {
+  id: string;
+  question: string;
+  set_id: string;
+  created_at?: string;
+  created_by?: string;
+  updated_at?: string;
+  updated_by?: string;
+  options: QuizOption[];
+}
+
+export interface GenerateQuizPayload {
+  text: string;
+  set_id?: string;
+  qtd_questions: number;
+  title?: string; // obrigatório se não enviar set_id
+}
+
+export interface GenerateQuizResponse {
+  quizzes: Quiz[];
+  flashcardSet: FlashcardSet;
 }

@@ -1,4 +1,5 @@
 export * from './useFlashcards';
+export * from './useQuizzes';
 export * from './useStudySession';
 export * from './useAnalytics';
 export * from './useAuth';

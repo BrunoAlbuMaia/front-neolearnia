@@ -8,9 +8,9 @@ import {
   useUpdateFlashcardSet,
   useDeleteFlashcardSet,
 } from "../../hooks/useFlashcards";
-import { flashcardsApi } from "../../api";
+import { flashcardsApi, quizzesApi } from "../../api";
 import type { FlashcardSet } from "../../types";
-import type { Flashcard } from "../../types";
+import type { Flashcard, Quiz } from "../../types";
 import { BookOpen, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import DeckItem from "./DeckItem";
@@ -18,11 +18,12 @@ import { Spinner } from "../ui/spinner";
 
 interface DecksProps {
   onStartStudy: (flashcards: Flashcard[]) => void;
+  onStartQuiz?: (quizzes: Quiz[], deckColor?: string) => void;
 }
 
 const DECKS_PER_PAGE = 5;
 
-export default function Decks({ onStartStudy }: DecksProps) {
+export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
   const { toast } = useToast();
   const { data: decks = [], isLoading: isLoadingDecks } = useFlashcardSets();
   const deleteDeck = useDeleteFlashcardSet();
@@ -89,32 +90,83 @@ export default function Decks({ onStartStudy }: DecksProps) {
 
   const handleStudyDeck = async (deckId: string) => {
     try {
-      // Buscar flashcards e informações do deck (para pegar a cor)
-      const [flashcards, deck] = await Promise.all([
-        flashcardsApi.getFlashcardsBySetId(deckId),
-        decks.find((d: FlashcardSet) => d.id === deckId)
-      ]);
+      // Buscar informações do deck primeiro para verificar o tipo
+      const deck = decks.find((d: FlashcardSet) => d.id === deckId);
       
-      if (flashcards.length === 0) {
+      if (!deck) {
         toast({
-          title: "Nenhum flashcard encontrado",
-          description: "Este deck não contém flashcards ainda.",
+          title: "Deck não encontrado",
+          description: "Não foi possível encontrar o deck selecionado.",
           variant: "destructive",
         });
         return;
       }
+
+      // Verificar se é quiz ou flashcard e buscar os dados apropriados
+      const isQuiz = deck.type === 'quiz';
       
-      // Adicionar cor do deck aos flashcards se disponível
-      const flashcardsWithColor = flashcards.map(card => ({
-        ...card,
-        color: deck?.color || "#3B82F6" // Cor padrão se não houver
-      }));
-      
-      onStartStudy(flashcardsWithColor);
-    } catch {
+      if (isQuiz) {
+        // Buscar quizzes e passar diretamente para QuizMode
+        const quizzes = await quizzesApi.getQuizzesBySetId(deckId);
+        
+        if (quizzes.length === 0) {
+          toast({
+            title: "Nenhum quiz encontrado",
+            description: "Este deck não contém quizzes ainda.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Se houver callback específico para quiz, usar ele
+        if (onStartQuiz) {
+          onStartQuiz(quizzes, deck?.color || "#3B82F6");
+        } else {
+          // Fallback: converter para flashcard (compatibilidade)
+          const items = quizzes.map((quiz: Quiz) => ({
+            id: quiz.id,
+            question: quiz.question,
+            answer: quiz.correct_answer,
+            set_id: quiz.set_id,
+            review_count: 0,
+            created_at: quiz.created_at,
+            created_by: quiz.created_by || '',
+            updated_at: quiz.updated_at,
+            updated_by: quiz.updated_by,
+            type: 'quiz' as const,
+            alternatives: quiz.alternatives,
+            correct_answer: quiz.correct_answer,
+            color: deck?.color || "#3B82F6",
+          }));
+          onStartStudy(items);
+        }
+      } else {
+        // Buscar flashcards normalmente
+        const flashcards = await flashcardsApi.getFlashcardsBySetId(deckId);
+        
+        if (flashcards.length === 0) {
+          toast({
+            title: "Nenhum flashcard encontrado",
+            description: "Este deck não contém flashcards ainda.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Adicionar cor do deck aos flashcards
+        const items = flashcards.map(card => ({
+          ...card,
+          color: deck?.color || "#3B82F6",
+        }));
+        
+        onStartStudy(items);
+      }
+    } catch (error: any) {
+      const deck = decks.find((d: FlashcardSet) => d.id === deckId);
+      const isQuiz = deck?.type === 'quiz';
       toast({
-        title: "Erro ao carregar flashcards",
-        description: "Não foi possível carregar os flashcards do deck.",
+        title: `Erro ao carregar ${isQuiz ? 'quizzes' : 'flashcards'}`,
+        description: error.message || `Não foi possível carregar os ${isQuiz ? 'quizzes' : 'flashcards'} do deck.`,
         variant: "destructive",
       });
     }

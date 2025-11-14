@@ -1,11 +1,13 @@
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { Badge } from "../ui/badge";
 import { motion } from "framer-motion";
-import { Trash2, Edit2, Play, Check, X, Loader2 } from "lucide-react";
+import { Trash2, Edit2, Play, Check, X, Loader2, HelpCircle, CheckCircle2 } from "lucide-react";
 import { AlertDialog, AlertDialogContent, AlertDialogTrigger, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "../ui/alert-dialog";
+import type { FlashcardSet } from "../../types";
 
 interface DeckItemProps {
-  deck: any;
+  deck: FlashcardSet;
   isEditing: boolean;
   editedTitle: string;
   setEditedTitle: (v: string) => void;
@@ -72,7 +74,31 @@ export default function DeckItem({
           </div>
         ) : (
           <div className="flex flex-col flex-1 min-w-0">
-            <h3 className="font-semibold text-sm text-foreground truncate">{deck.title}</h3>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-semibold text-sm text-foreground truncate">{deck.title}</h3>
+              {deck.type && (
+                <Badge 
+                  variant="outline" 
+                  className={`text-xs ${
+                    deck.type === 'quiz' 
+                      ? 'border-primary/30 bg-primary/5 text-primary' 
+                      : 'border-muted-foreground/30 bg-muted/50 text-muted-foreground'
+                  }`}
+                >
+                  {deck.type === 'quiz' ? (
+                    <>
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Quiz
+                    </>
+                  ) : (
+                    <>
+                      <HelpCircle className="h-3 w-3 mr-1" />
+                      Flashcard
+                    </>
+                  )}
+                </Badge>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground mt-0.5">
               Criado em {new Date(deck.created_at || "").toLocaleDateString('pt-BR', {
                 day: '2-digit',

@@ -7,16 +7,20 @@ import { AnalyticsPage } from "../../components/AnalyticsPage";
 import { type Flashcard } from "../../../shared/schema";
 import { useToast } from "../../hooks/use-toast";
 import { StudyPage } from "./StudyPage";
+import { QuizPage } from "./QuizPage";
 import { useUser } from "../../hooks/useUser";
 import OnboardingScreen from "../../components/Auth/Onboarding/OnboardingScreen";
 import { Spinner } from "../../components/ui/spinner";
+import { type Quiz } from "../../types";
 
-type Screen = 'auth' | 'dashboard' | 'study' | 'analytics' | 'reviewMode' | 'onboarding';
+type Screen = 'auth' | 'dashboard' | 'study' | 'quiz' | 'analytics' | 'reviewMode' | 'onboarding';
 
 export default function Home() {
   const { user: authUser, loading: authLoading, logoutUser } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<Screen | null>(null);
   const [studyFlashcards, setStudyFlashcards] = useState<Flashcard[]>([]);
+  const [studyQuizzes, setStudyQuizzes] = useState<Quiz[]>([]);
+  const [quizDeckColor, setQuizDeckColor] = useState<string>("#3B82F6");
   const { toast } = useToast();
   const { userState, isLoading: userLoading } = useUser();
 
@@ -76,6 +80,12 @@ export default function Home() {
     setStudyFlashcards(flashcards);
     setCurrentScreen('study');
   };
+
+  const handleStartQuiz = (quizzes: Quiz[], deckColor?: string) => {
+    setStudyQuizzes(quizzes);
+    setQuizDeckColor(deckColor || "#3B82F6");
+    setCurrentScreen('quiz');
+  };
   
   const handleBackToDashboard = () => setCurrentScreen('dashboard');
   const handleNavigateToAnalytics = () => setCurrentScreen('analytics');
@@ -102,6 +112,8 @@ export default function Home() {
         return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
       case 'study':
         return <StudyPage flashcards={studyFlashcards} onBack={handleBackToDashboard} />;
+      case 'quiz':
+        return <QuizPage quizzes={studyQuizzes} onBack={handleBackToDashboard} deckColor={quizDeckColor} />;
       case 'analytics':
         return (
           <div className="min-h-screen bg-background">
@@ -120,6 +132,7 @@ export default function Home() {
             user={authUser}
             onLogout={handleLogout}
             onStartStudy={handleStartStudy}
+            onStartQuiz={handleStartQuiz}
             onNavigateToAnalytics={handleNavigateToAnalytics}
           />
         );

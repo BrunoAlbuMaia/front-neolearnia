@@ -31,7 +31,7 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
 
       toast({
         title: "Login realizado com sucesso!",
-        description: "Bem-vindo de volta ao MemorizeMy",
+        description: "Bem-vindo de volta ao MyMemorize",
       });
       onAuthSuccess();
     } catch (error: any) {

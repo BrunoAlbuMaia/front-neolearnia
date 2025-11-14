@@ -78,7 +78,7 @@ export default function Sidebar({
             className="w-32 h-32 drop-shadow-md transition-transform duration-300 hover:scale-105"
           />
         <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-foreground  text-accent">
-          MemorizeMy
+          MyMemorize
         </h1>
       </div>
 
@@ -131,6 +131,17 @@ export default function Sidebar({
     <>
       {/* Navbar Superior */}
       <header className="bg-card border-b border-border p-2 flex items-center justify-between sticky top-0 z-50 shadow-sm" data-testid="navbar">
+      <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" data-testid="button-menu">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-2 w-64 overflow-y-auto">
+              {sidebarContent}
+            </SheetContent>
+          </Sheet>
+      
       {/* Logo */}
       <div className="flex items-center space-x-3 group">
         {/* Container com leve brilho */}
@@ -148,7 +159,7 @@ export default function Sidebar({
 
           {/* Nome com destaque visual */}
           <h1 className="text-xl font-extrabold tracking-tight text-foreground  from-indigo-500 to-purple-500 bg-clip-text text-transparent bg-accent text-accent-foreground hover:bg-accent/90">
-            MemorizeMy
+            MyMemorize
           </h1>
         </div>
 
@@ -167,16 +178,7 @@ export default function Sidebar({
           </Button>
           
           <ThemeToggle />
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" data-testid="button-menu">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-2 w-64 overflow-y-auto">
-              {sidebarContent}
-            </SheetContent>
-          </Sheet>
+         
         </div>
       </header>
     </>
