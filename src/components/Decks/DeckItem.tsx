@@ -2,8 +2,33 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
 import { motion } from "framer-motion";
-import { Trash2, Edit2, Play, Check, X, Loader2, HelpCircle, CheckCircle2 } from "lucide-react";
-import { AlertDialog, AlertDialogContent, AlertDialogTrigger, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "../ui/alert-dialog";
+import { 
+  Trash2, 
+  Edit2, 
+  Play, 
+  Check, 
+  X, 
+  Loader2, 
+  HelpCircle, 
+  CheckCircle2, 
+  Settings,
+  MoreVertical
+} from "lucide-react";
+import { 
+  AlertDialog, 
+  AlertDialogContent, 
+  AlertDialogTrigger, 
+  AlertDialogFooter, 
+  AlertDialogCancel, 
+  AlertDialogAction 
+} from "../ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import type { FlashcardSet } from "../../types";
 
 interface DeckItemProps {
@@ -16,6 +41,7 @@ interface DeckItemProps {
   onEdit: () => void;
   onDelete: () => void;
   onStudy: () => void;
+  onManage?: () => void;
   isSaving: boolean;
 }
 
@@ -29,6 +55,7 @@ export default function DeckItem({
   onEdit,
   onDelete,
   onStudy,
+  onManage,
   isSaving,
 }: DeckItemProps) {
   return (
@@ -40,46 +67,54 @@ export default function DeckItem({
       whileHover={{ scale: 1.005 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 220, damping: 18 }}
-      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border border-border/50 rounded-lg bg-card hover:bg-muted/50 hover:border-primary/20 transition-all shadow-sm"
+      className="group relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 md:p-5 border border-border/50 rounded-xl bg-card hover:bg-muted/30 hover:border-primary/30 transition-all duration-200 shadow-sm hover:shadow-md"
     >
-      <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
+      {/* Informações do Deck */}
+      <div className="flex-1 min-w-0">
         {isEditing ? (
-          <div className="flex flex-1 items-center gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
             <Input
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
               className="flex-1 text-sm"
               autoFocus
             />
-            <Button
-              size="icon"
-              className="h-8 w-8"
-              onClick={onSave}
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Check className="h-4 w-4" />
-              )}
-            </Button>
-            <Button
-              size="icon"
-              variant="outline"
-              className="h-8 w-8"
-              onClick={onCancel}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-2 sm:shrink-0">
+              <Button
+                size="sm"
+                onClick={onSave}
+                disabled={isSaving}
+                className="flex-1 sm:flex-initial"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-1" />
+                    Salvar
+                  </>
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onCancel}
+                className="flex-1 sm:flex-initial"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         ) : (
-          <div className="flex flex-col flex-1 min-w-0">
+          <>
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-sm text-foreground truncate">{deck.title}</h3>
+              <h3 className="font-semibold text-base text-foreground truncate">
+                {deck.title}
+              </h3>
               {deck.type && (
                 <Badge 
                   variant="outline" 
-                  className={`text-xs ${
+                  className={`shrink-0 text-xs ${
                     deck.type === 'quiz' 
                       ? 'border-primary/30 bg-primary/5 text-primary' 
                       : 'border-muted-foreground/30 bg-muted/50 text-muted-foreground'
@@ -99,53 +134,83 @@ export default function DeckItem({
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground">
               Criado em {new Date(deck.created_at || "").toLocaleDateString('pt-BR', {
                 day: '2-digit',
                 month: 'short',
                 year: 'numeric'
               })}
             </p>
-          </div>
+          </>
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Button size="sm" className="h-8 bg-accent text-accent-foreground hover:bg-accent/90" onClick={onStudy}>
-          <Play className="h-4 w-4 mr-1" /> Estudar
-        </Button>
-
-        <Button
-          size="icon"
-          variant="outline"
-          className="h-8 w-8"
-          onClick={onEdit}
+      {/* Ações - Alinhadas à direita em desktop */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Botão Principal - Estudar */}
+        <Button 
+          onClick={onStudy}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow transition-all"
+          size="sm"
         >
-          <Edit2 className="h-4 w-4" />
+          <Play className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Estudar</span>
+          <span className="sm:hidden">Iniciar</span>
         </Button>
 
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
+        {/* Dropdown Menu para ações secundárias */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button
+              variant="outline"
               size="icon"
-              variant="destructive"
-              className="h-8 w-8"
+              className="h-9 w-9 border-border/50 hover:bg-accent"
             >
-              <Trash2 className="h-4 w-4" />
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">Mais opções</span>
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <p className="text-sm font-medium mb-4">
-              Tem certeza que deseja deletar este deck?
-              <br />
-              Esta ação não pode ser desfeita.
-            </p>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={onDelete}>Deletar</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {onManage && (
+              <>
+                <DropdownMenuItem onClick={onManage} className="cursor-pointer">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Gerenciar
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            <DropdownMenuItem onClick={onEdit} className="cursor-pointer">
+              <Edit2 className="h-4 w-4 mr-2" />
+              Editar título
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem 
+                  onSelect={(e) => e.preventDefault()}
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Deletar deck
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <p className="text-sm font-medium mb-4">
+                  Tem certeza que deseja deletar este deck?
+                  <br />
+                  <span className="text-muted-foreground">Esta ação não pode ser desfeita.</span>
+                </p>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Deletar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </motion.div>
   );

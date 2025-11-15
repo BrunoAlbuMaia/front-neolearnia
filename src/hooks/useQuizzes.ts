@@ -36,6 +36,18 @@ export function useGenerateQuiz() {
   });
 }
 
+export function useDeleteQuiz() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ setId, quizId }: { setId: string; quizId: string }) =>
+      quizzesApi.deleteQuiz(setId, quizId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.quizzesBySet(variables.setId) });
+    },
+  });
+}
+
 
 
 

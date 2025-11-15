@@ -45,6 +45,18 @@ export function useDeleteFlashcardSet() {
   });
 }
 
+export function useCreateFlashcardSet() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { title: string; type?: 'flashcard' | 'quiz'; color?: string }) =>
+      flashcardsApi.createFlashcardSet(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.flashcardSets() });
+    },
+  });
+}
+
 export function useUpdateFlashcardDifficulty() {
   return useMutation({
     mutationFn: ({ flashcardId, difficulty }: { flashcardId: string; difficulty: 'easy' | 'medium' | 'difficult' }) =>
@@ -61,6 +73,18 @@ export function useUpdateFlashcardSet() {
       flashcardsApi.updateFlashcardSets(setId, { title }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.flashcardSets() });
+    },
+  });
+}
+
+export function useDeleteFlashcard() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ setId, flashcardId }: { setId: string; flashcardId: string }) =>
+      flashcardsApi.deleteFlashcard(setId, flashcardId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.flashcardsBySet(variables.setId) });
     },
   });
 }

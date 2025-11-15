@@ -8,13 +8,15 @@ import {
   useUpdateFlashcardSet,
   useDeleteFlashcardSet,
 } from "../../hooks/useFlashcards";
+import { CreateDeckDialog } from "../CreateDeckDialog";
 import { flashcardsApi, quizzesApi } from "../../api";
 import type { FlashcardSet } from "../../types";
 import type { Flashcard, Quiz } from "../../types";
-import { BookOpen, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { BookOpen, Search, ChevronLeft, ChevronRight, X, Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import DeckItem from "./DeckItem";
 import { Spinner } from "../ui/spinner";
+import { DeckManager } from "../DeckManager";
 
 interface DecksProps {
   onStartStudy: (flashcards: Flashcard[]) => void;
@@ -33,6 +35,8 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
   const [editedTitle, setEditedTitle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [managingDeckId, setManagingDeckId] = useState<string | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Filtrar decks por nome
   const filteredDecks = useMemo(() => {
@@ -184,17 +188,39 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
     });
   };
 
+  const handleManageDeck = (deckId: string) => {
+    setManagingDeckId(deckId);
+  };
 
+  const handleBackFromManage = () => {
+    setManagingDeckId(null);
+  };
+
+  // Se estiver gerenciando um deck, mostrar o DeckManager
+  if (managingDeckId) {
+    const deck = decks.find((d: FlashcardSet) => d.id === managingDeckId);
+    if (deck) {
+      return <DeckManager deck={deck} onBack={handleBackFromManage} />;
+    }
+  }
 
   return (
     <div className="space-y-5 w-full">
       <Card className="border-border/50 shadow-sm w-full">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <CardTitle className="flex items-center text-lg font-semibold">
-            <BookOpen className="text-primary mr-2 h-5 w-5" />
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 md:p-6">
+          <CardTitle className="flex items-center text-lg md:text-xl font-semibold">
+            <BookOpen className="text-primary mr-2 h-5 w-5 shrink-0" />
             Seus Decks
           </CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              onClick={() => setShowCreateDialog(true)}
+              size="sm"
+              className="shrink-0"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Criar Deck
+            </Button>
             {searchQuery && (
               <span className="text-xs text-muted-foreground">
                 {filteredDecks.length} de {decks.length}
@@ -206,7 +232,7 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-4 md:p-6">
           {/* Barra de Pesquisa */}
           {!isLoadingDecks && decks.length > 0 && (
             <div className="relative">
@@ -270,6 +296,7 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
                       onEdit={() => handleEditDeck(deck.id, deck.title)}
                       onDelete={() => handleDeleteDeck(deck.id)}
                       onStudy={() => handleStudyDeck(deck.id)}
+                      onManage={() => handleManageDeck(deck.id)}
                       isSaving={updateDeck.isPending}
                     />
                   ))}
@@ -278,11 +305,11 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
 
               {/* Paginação */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t">
+                  <div className="text-sm text-muted-foreground order-2 sm:order-1">
                     Mostrando {startIndex + 1} - {Math.min(endIndex, filteredDecks.length)} de {filteredDecks.length}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 order-1 sm:order-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -294,7 +321,7 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
                       <span className="hidden sm:inline">Anterior</span>
                     </Button>
                     <div className="flex items-center gap-1 px-2">
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">
                         Página {currentPage} de {totalPages}
                       </span>
                     </div>
@@ -315,6 +342,15 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog para criar deck manualmente */}
+      <CreateDeckDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSuccess={() => {
+          setCurrentPage(1); // Reset para primeira página
+        }}
+      />
     </div>
   );
 }

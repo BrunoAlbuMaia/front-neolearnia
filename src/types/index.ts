@@ -77,7 +77,7 @@ export interface FlashcardSet {
   original_text:string;
   created_at: string;
   color?: string;
-  type?: 'standard' | 'quiz'; // Tipo do deck (flashcards padrão ou quizzes)
+  type?: 'flashcard' | 'quiz'; // Tipo do deck (flashcards padrão ou quizzes)
 }
 
 export interface StudySession {
