@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Input } from "./ui/input";
@@ -8,11 +8,15 @@ import { Dialog, DialogContent } from "./ui/dialog";
 import { useToast } from "../hooks/use-toast";
 import { useFlashcardSets, useGenerateFlashcards, useDeleteFlashcardSet } from "../hooks/useFlashcards";
 import { useGenerateQuiz } from "../hooks/useQuizzes";
-import Decks from './Decks/Decks'
 import type { Flashcard, Quiz } from "../types";
 import PdfPreviewer from "./ui/pdfPreviewer";
 import { ColorPicker } from "./ui/color-picker";
-import { Wand2, Loader2, Plus, Sparkles, Palette, HelpCircle, CheckCircle2 } from "lucide-react";
+import { Wand2, Loader2, Plus, Sparkles, Palette, HelpCircle, CheckCircle2, BookOpen } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { SkeletonCard } from "./ui/skeleton-card";
+
+// Lazy load do componente Decks para melhor performance
+const Decks = lazy(() => import('./Decks/Decks'));
 
 
 interface DashboardProps {
@@ -46,6 +50,18 @@ export default function Dashboard({
   const generateFlashcards = useGenerateFlashcards();
   const generateQuiz = useGenerateQuiz();
   const deleteDeck = useDeleteFlashcardSet();
+
+  // Memoizar opções de deck para Select
+  const deckOptions = useMemo(() => 
+    decks.map(deck => ({ value: deck.id, label: deck.title })),
+    [decks]
+  );
+
+  const isGenerating = generateFlashcards.isPending || generateQuiz.isPending;
+  const estimatedCards = useMemo(() => 
+    Math.ceil(studyContent.length / 100),
+    [studyContent.length]
+  );
 
   const handleGenerate = () => {
     if (!studyContent.trim()) {
@@ -143,7 +159,7 @@ export default function Dashboard({
 
 
   return (
-    <div className="min-h-screen bg-background w-full">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 w-full">
       <Dialog open={isPdfModalOpen} onOpenChange={setIsPdfModalOpen}>
         <DialogContent className="w-full max-w-4xl h-[90vh] p-0 flex flex-col">
           {pdfFile && (
@@ -158,36 +174,110 @@ export default function Dashboard({
         </DialogContent>
       </Dialog>
 
-      <div className="max-w-6xl mx-auto p-4 pb-8 space-y-6 w-full">
-        <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl p-6 text-center sm:text-left">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Bem-vindo de volta!</h2>
-        </div>
+      <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8">
+        {/* Header Melhorado - Mais Vibrante */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-3xl gradient-primary p-8 md:p-10 shadow-2xl glow-primary"
+        >
+          {/* Efeito de brilho animado */}
+          <div className="absolute inset-0 shine-effect opacity-30" />
+          
+          {/* Padrão de grid sutil */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-10" />
+          
+          {/* Gradiente radial para profundidade */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent" />
+          
+          <div className="relative z-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight drop-shadow-lg">
+              Bem-vindo de volta! 👋
+            </h2>
+            <p className="text-base md:text-lg text-white/90 font-medium">
+              Continue de onde parou ou crie novos decks de estudo
+            </p>
+          </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:p-4">
-          {/* Formulário de Criação */}
-          <div className="space-y-4">
-            <Card className="shadow-lg border-2 border-primary/10">
-              <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5">
-                <CardTitle className="flex items-center text-xl">
-                  <Sparkles className="text-primary mr-2 h-6 w-6" />
-                  Criar Novos Flashcards
-                </CardTitle>
-                <CardDescription>
-                  Cole seu conteúdo e deixe a IA criar flashcards personalizados para você
-                </CardDescription>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+          {/* Formulário de Criação - Melhorado */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="space-y-4"
+          >
+            <Card className="shadow-2xl border-2 border-primary/20 hover:border-primary/40 hover-lift transition-all duration-300 relative overflow-hidden bg-gradient-to-br from-card via-card to-primary/5">
+              {/* Efeito de brilho sutil */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl opacity-50" />
+              
+              {/* Overlay de loading durante geração */}
+              <AnimatePresence>
+                {isGenerating && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center rounded-xl z-10"
+                  >
+                    <div className="text-center">
+                      <div className="relative">
+                        <Loader2 className="h-10 w-10 animate-spin mx-auto mb-3 text-primary" />
+                        <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl" />
+                      </div>
+                      <p className="text-base font-semibold text-foreground">Gerando {cardType === 'quiz' ? 'quiz' : 'flashcards'}...</p>
+                      <p className="text-sm text-muted-foreground mt-2">Isso pode levar alguns segundos</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <CardHeader className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/5 border-b border-primary/20 relative overflow-hidden">
+                {/* Efeito de gradiente animado no header */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 opacity-50" />
+                <div className="relative z-10">
+                  <CardTitle className="flex items-center text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    <Sparkles className="text-primary mr-2 h-6 w-6 drop-shadow-sm" />
+                    Criar Novos Flashcards
+                  </CardTitle>
+                  <CardDescription className="text-sm md:text-base mt-2 text-muted-foreground">
+                    Cole seu conteúdo e deixe a IA criar flashcards personalizados para você
+                  </CardDescription>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-5 pt-6">
-                <Textarea
-                  placeholder="Cole aqui o conteúdo que você está estudando, como artigos, livros, anotações, etc. Vou te dar os melhores flashcards, com base nesse conteúdo!"
-                  value={studyContent}
-                  onChange={(e) => {
-                    setStudyContent(e.target.value);
-                    if (e.target.value) {
-                      setPdfFile(null);
-                    }
-                  }}
-                  className="h-40 resize-none text-sm"
-                />
+              
+              <CardContent className="space-y-5 pt-6 relative">
+                <div className="relative">
+                  <Textarea
+                    placeholder="Cole aqui o conteúdo que você está estudando, como artigos, livros, anotações, etc. Vou te dar os melhores flashcards, com base nesse conteúdo!"
+                    value={studyContent}
+                    onChange={(e) => {
+                      setStudyContent(e.target.value);
+                      if (e.target.value) {
+                        setPdfFile(null);
+                      }
+                    }}
+                    className="h-40 resize-none text-sm min-h-[160px] focus:ring-2 focus:ring-primary/20"
+                    disabled={isGenerating}
+                  />
+                  
+                  {/* Contador de caracteres melhorado */}
+                  {studyContent.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex items-center justify-between mt-2"
+                    >
+                      <p className="text-xs text-muted-foreground">
+                        {studyContent.length.toLocaleString()} {studyContent.length === 1 ? 'caractere' : 'caracteres'}
+                      </p>
+                      <p className="text-xs font-medium text-accent">
+                        ~{estimatedCards} {estimatedCards === 1 ? 'flashcard' : 'flashcards'} estimados
+                      </p>
+                    </motion.div>
+                  )}
+                </div>
                   {/* <div className="flex items-center justify-between">
                     <Button
                       variant="outline"
@@ -215,7 +305,7 @@ export default function Dashboard({
                       }
                     }}
                   /> */}
-                {/* Contador de caracteres */}
+                {/* Contador de caracteres 
                 {studyContent.length > 0 && (
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-muted-foreground">
@@ -225,22 +315,35 @@ export default function Dashboard({
                       {Math.ceil(studyContent.length / 100)} flashcards estimados
                     </p>
                   </div>
-                )}
+                )}*/}
 
                 {/* Opções de Personalização - Aparece quando há conteúdo */}
-                {studyContent.trim().length > 0 && (
-                  <div className="space-y-4 pt-4 border-t animate-in fade-in slide-in-from-top-4 duration-300">
-                    {/* Seletor de Tipo de Flashcard */}
-                    <div className="p-4 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 rounded-lg border border-primary/10 shadow-sm">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Sparkles className="h-4 w-4 text-primary" />
-                        <h3 className="text-sm font-semibold text-foreground">Tipo de Flashcard</h3>
+                <AnimatePresence>
+                  {studyContent.trim().length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 pt-4 border-t"
+                    >
+                    {/* Seletor de Tipo de Flashcard - Mais Vibrante */}
+                    <div className="p-5 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5 rounded-xl border-2 border-primary/20 shadow-lg relative overflow-hidden">
+                      {/* Efeito de brilho de fundo */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 opacity-30" />
+                      
+                      <div className="relative z-10 flex items-center gap-2 mb-4">
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent">
+                          <Sparkles className="h-4 w-4 text-white" />
+                        </div>
+                        <h3 className="text-sm font-bold text-foreground">Tipo de Conteúdo</h3>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="relative z-10 grid grid-cols-2 gap-3">
                         {/* Card Padrão */}
-                        <button
+                        <motion.button
                           type="button"
                           onClick={() => setCardType('standard')}
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault();
@@ -249,36 +352,53 @@ export default function Dashboard({
                           }}
                           aria-pressed={cardType === 'standard'}
                           aria-label="Selecionar flashcard padrão"
-                          className={`relative p-4 rounded-lg border-2 transition-all duration-200 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                          className={`relative p-5 rounded-xl border-2 transition-all duration-300 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 overflow-hidden ${
                             cardType === 'standard'
-                              ? 'border-primary bg-primary/10 shadow-md scale-[1.02] ring-2 ring-primary/20'
-                              : 'border-border bg-card hover:border-primary/50 hover:bg-accent/50'
+                              ? 'border-primary bg-gradient-to-br from-primary/20 to-primary/5 shadow-lg scale-[1.02] ring-2 ring-primary/30 glow-primary'
+                              : 'border-border/50 bg-card hover:border-primary/60 hover:bg-gradient-to-br hover:from-primary/5 hover:to-transparent hover:shadow-md'
                           }`}
                         >
-                          <div className="flex items-start gap-3">
-                            <div className={`p-2 rounded-md transition-colors ${
+                          {cardType === 'standard' && (
+                            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+                          )}
+                          <div className="relative z-10 flex items-start gap-3">
+                            <div className={`p-2.5 rounded-lg transition-all ${
                               cardType === 'standard'
-                                ? 'bg-primary text-primary-foreground'
+                                ? 'bg-gradient-to-br from-primary to-primary/80 text-white shadow-md'
                                 : 'bg-muted text-muted-foreground'
                             }`}>
                               <HelpCircle className="h-5 w-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-sm mb-1 text-foreground">Flashcard Padrão</h4>
+                              <h4 className={`font-bold text-sm mb-1 ${
+                                cardType === 'standard' ? 'text-primary' : 'text-foreground'
+                              }`}>
+                                Flashcard
+                              </h4>
                               <p className="text-xs text-muted-foreground leading-relaxed">
                                 Pergunta e resposta tradicional
                               </p>
                             </div>
                             {cardType === 'standard' && (
-                              <CheckCircle2 className="h-5 w-5 text-primary absolute top-2 right-2 animate-in fade-in zoom-in duration-200" />
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute top-2 right-2"
+                              >
+                                <div className="p-1 rounded-full bg-primary text-white">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </div>
+                              </motion.div>
                             )}
                           </div>
-                        </button>
+                        </motion.button>
 
                         {/* Card Quiz */}
-                        <button
+                        <motion.button
                           type="button"
                           onClick={() => setCardType('quiz')}
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault();
@@ -287,55 +407,81 @@ export default function Dashboard({
                           }}
                           aria-pressed={cardType === 'quiz'}
                           aria-label="Selecionar flashcard tipo quiz"
-                          className={`relative p-4 rounded-lg border-2 transition-all duration-200 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                          className={`relative p-5 rounded-xl border-2 transition-all duration-300 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 overflow-hidden ${
                             cardType === 'quiz'
-                              ? 'border-primary bg-primary/10 shadow-md scale-[1.02] ring-2 ring-primary/20'
-                              : 'border-border bg-card hover:border-primary/50 hover:bg-accent/50'
+                              ? 'border-accent bg-gradient-to-br from-accent/20 to-accent/5 shadow-lg scale-[1.02] ring-2 ring-accent/30 glow-accent'
+                              : 'border-border/50 bg-card hover:border-accent/60 hover:bg-gradient-to-br hover:from-accent/5 hover:to-transparent hover:shadow-md'
                           }`}
                         >
-                          <div className="flex items-start gap-3">
-                            <div className={`p-2 rounded-md transition-colors ${
+                          {cardType === 'quiz' && (
+                            <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent" />
+                          )}
+                          <div className="relative z-10 flex items-start gap-3">
+                            <div className={`p-2.5 rounded-lg transition-all ${
                               cardType === 'quiz'
-                                ? 'bg-primary text-primary-foreground'
+                                ? 'bg-gradient-to-br from-accent to-accent/80 text-white shadow-md'
                                 : 'bg-muted text-muted-foreground'
                             }`}>
                               <CheckCircle2 className="h-5 w-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-sm mb-1 text-foreground">Quiz</h4>
+                              <h4 className={`font-bold text-sm mb-1 ${
+                                cardType === 'quiz' ? 'text-accent' : 'text-foreground'
+                              }`}>
+                                Quiz
+                              </h4>
                               <p className="text-xs text-muted-foreground leading-relaxed">
                                 Múltipla escolha (A, B, C, D)
                               </p>
                             </div>
                             {cardType === 'quiz' && (
-                              <CheckCircle2 className="h-5 w-5 text-primary absolute top-2 right-2 animate-in fade-in zoom-in duration-200" />
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute top-2 right-2"
+                              >
+                                <div className="p-1 rounded-full bg-accent text-white">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </div>
+                              </motion.div>
                             )}
                           </div>
-                        </button>
+                        </motion.button>
                       </div>
                     </div>
 
-                    {/* Seletor de Cores */}
-                    <div className="p-4 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 rounded-lg border border-primary/10 shadow-sm">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Palette className="h-4 w-4 text-primary" />
-                        <h3 className="text-sm font-semibold text-foreground">Personalização Visual</h3>
+                    {/* Seletor de Cores - Mais Vibrante */}
+                    <div className="p-5 bg-gradient-to-br from-accent/10 via-primary/10 to-accent/5 rounded-xl border-2 border-accent/20 shadow-lg relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-primary/5 to-accent/5 opacity-30" />
+                      <div className="relative z-10 flex items-center gap-2 mb-4">
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-accent to-primary">
+                          <Palette className="h-4 w-4 text-white" />
+                        </div>
+                        <h3 className="text-sm font-bold text-foreground">Personalização Visual</h3>
                       </div>
-                      <ColorPicker
-                        value={selectedColor}
-                        onChange={setSelectedColor}
-                      />
+                      <div className="relative z-10">
+                        <ColorPicker
+                          value={selectedColor}
+                          onChange={setSelectedColor}
+                        />
+                      </div>
                     </div>
 
-                    {/* Seleção de Deck */}
-                    <div>
-                      <h3 className="text-sm font-semibold mb-3 text-foreground">Onde salvar os flashcards?</h3>
+                    {/* Seleção de Deck - Mais Vibrante */}
+                    <div className="p-5 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 rounded-xl border-2 border-primary/20 shadow-lg">
+                      <h3 className="text-sm font-bold mb-4 text-foreground flex items-center gap-2">
+                        <span className="p-1.5 rounded-lg bg-gradient-to-br from-primary to-accent">
+                          <BookOpen className="h-3.5 w-3.5 text-white" />
+                        </span>
+                        Onde salvar os flashcards?
+                      </h3>
 
                     {!showNewDeckInput ? (
                       <>
                         <Select
                           value={selectedDeckId || ""}
                           onValueChange={(value: string) => setSelectedDeckId(value || null)}
+                          disabled={isGenerating}
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Adicionar a um deck existente..." />
@@ -346,9 +492,9 @@ export default function Dashboard({
                                 Nenhum deck disponível
                               </SelectItem>
                             ) : (
-                              decks.map((deck) => (
-                                <SelectItem key={deck.id} value={deck.id}>
-                                  {deck.title}
+                              deckOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
                                 </SelectItem>
                               ))
                             )}
@@ -400,50 +546,78 @@ export default function Dashboard({
                       </>
                     )}
                     </div>
-                  </div>
-                )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
 
-                {/* Botão de Gerar */}
+                {/* Botão de Gerar - Melhorado */}
                 <div className="pt-2">
-                  <Button
-                    onClick={handleGenerate}
-                    disabled={
-                      !studyContent.trim() ||
-                      (!selectedDeckId && !newDeckTitle.trim()) ||
-                      generateFlashcards.isPending ||
-                      generateQuiz.isPending
-                    }
-                    size="lg"
-                    className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground hover:from-primary/90 hover:to-accent/90 shadow-lg hover:shadow-xl transition-all duration-200"
+                  <motion.div
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
                   >
-                    {(generateFlashcards.isPending || generateQuiz.isPending) ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando {cardType === 'quiz' ? 'quiz' : 'flashcards'}...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="mr-2 h-4 w-4" /> Gerar {cardType === 'quiz' ? 'Quiz' : 'Flashcards'} com IA
-                      </>
-                    )}
-                  </Button>
+                    <Button
+                      onClick={handleGenerate}
+                      disabled={
+                        !studyContent.trim() ||
+                        (!selectedDeckId && !newDeckTitle.trim()) ||
+                        isGenerating
+                      }
+                      size="lg"
+                      className="w-full gradient-primary text-white hover:opacity-90 shadow-xl hover:shadow-2xl glow-primary hover-lift transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none keyboard-navigation font-semibold"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                          Gerando {cardType === 'quiz' ? 'quiz' : 'flashcards'}...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="mr-2 h-4 w-4" /> 
+                          Gerar {cardType === 'quiz' ? 'Quiz' : 'Flashcards'} com IA
+                        </>
+                      )}
+                    </Button>
+                  </motion.div>
 
                   {studyContent.trim() && !selectedDeckId && !newDeckTitle.trim() && (
-                    <p className="text-xs text-center text-muted-foreground mt-3 p-2 bg-muted/50 rounded">
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-xs text-center text-muted-foreground mt-3 p-2 bg-muted/50 rounded-lg"
+                    >
                       Selecione ou crie um deck para continuar.
-                    </p>
+                    </motion.p>
                   )}
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
 
-          <Decks
-            onStartStudy={onStartStudy}
-            onStartQuiz={onStartQuiz}>
-          </Decks>
+          {/* Decks - Lazy Loaded */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Suspense fallback={
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            }>
+              <Decks
+                onStartStudy={onStartStudy}
+                onStartQuiz={onStartQuiz}
+              />
+            </Suspense>
+          </motion.div>
           
         </div>
       </div>
     </div>
+    
   );
 }

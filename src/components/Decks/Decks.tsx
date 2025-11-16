@@ -17,6 +17,9 @@ import { AnimatePresence } from "framer-motion";
 import DeckItem from "./DeckItem";
 import { Spinner } from "../ui/spinner";
 import { DeckManager } from "../DeckManager";
+import { useDebounce } from "../../hooks/useDebounce";
+import { EmptyState } from "../ui/empty-state";
+import { SkeletonCard } from "../ui/skeleton-card";
 
 interface DecksProps {
   onStartStudy: (flashcards: Flashcard[]) => void;
@@ -38,15 +41,18 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
   const [managingDeckId, setManagingDeckId] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  // Filtrar decks por nome
+  // Debounce da busca para melhor performance
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Filtrar decks por nome (com debounce)
   const filteredDecks = useMemo(() => {
-    if (!searchQuery.trim()) {
+    if (!debouncedSearchQuery.trim()) {
       return decks;
     }
-    return decks.filter((deck: any) =>
-      deck.title.toLowerCase().includes(searchQuery.toLowerCase())
+    return decks.filter((deck: FlashcardSet) =>
+      deck.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
     );
-  }, [decks, searchQuery]);
+  }, [decks, debouncedSearchQuery]);
 
   // Calcular paginação
   const totalPages = Math.ceil(filteredDecks.length / DECKS_PER_PAGE);
@@ -206,43 +212,52 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
 
   return (
     <div className="space-y-5 w-full">
-      <Card className="border-border/50 shadow-sm w-full">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 md:p-6">
-          <CardTitle className="flex items-center text-lg md:text-xl font-semibold">
-            <BookOpen className="text-primary mr-2 h-5 w-5 shrink-0" />
+      <Card className="border-2 border-primary/20 shadow-xl hover-lift w-full bg-gradient-to-br from-card via-card to-primary/5 relative overflow-hidden">
+        {/* Efeito de brilho sutil */}
+        <div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl opacity-50" />
+        
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 md:p-6 relative z-10 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border-b border-primary/20">
+          <CardTitle className="flex items-center text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent mr-3">
+              <BookOpen className="text-white h-5 w-5 shrink-0" />
+            </div>
             Seus Decks
           </CardTitle>
           <div className="flex items-center gap-2 flex-wrap">
             <Button
               onClick={() => setShowCreateDialog(true)}
               size="sm"
-              className="shrink-0"
+              className="shrink-0 gradient-primary text-white shadow-lg hover:shadow-xl glow-primary hover-lift"
             >
               <Plus className="h-4 w-4 mr-2" />
               Criar Deck
             </Button>
             {searchQuery && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
                 {filteredDecks.length} de {decks.length}
               </span>
             )}
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+            <span className="text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-full border border-accent/20">
               {decks.length} {decks.length === 1 ? 'deck' : 'decks'}
             </span>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-4 p-4 md:p-6">
-          {/* Barra de Pesquisa */}
+          {/* Barra de Pesquisa - Mais Vibrante */}
           {!isLoadingDecks && decks.length > 0 && (
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20">
+                  <Search className="h-4 w-4 text-primary" />
+                </div>
+              </div>
               <Input
                 type="text"
                 placeholder="Pesquisar decks por nome..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-10 pr-10"
+                className="pl-12 pr-10 border-2 border-primary/20 focus:border-primary/40 focus:ring-2 focus:ring-primary/20 bg-gradient-to-r from-background to-primary/5"
               />
               {searchQuery && (
                 <Button
@@ -259,27 +274,31 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
 
           {/* Lista de Decks */}
           {isLoadingDecks ? (
-            <Spinner size="lg" text="Carregando decks..." className="py-10" />
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
           ) : decks.length === 0 ? (
-            <div className="text-center py-10">
-              <BookOpen className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground mb-2">
-                Você ainda não criou nenhum deck.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Cole um conteúdo acima para criar seu primeiro.
-              </p>
-            </div>
+            <EmptyState
+              icon={BookOpen}
+              title="Nenhum deck criado ainda"
+              description="Comece criando seu primeiro deck de flashcards ou quiz para começar a estudar!"
+              action={{
+                label: "Criar Primeiro Deck",
+                onClick: () => setShowCreateDialog(true)
+              }}
+            />
           ) : filteredDecks.length === 0 ? (
-            <div className="text-center py-10">
-              <Search className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground mb-2">
-                Nenhum deck encontrado
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Tente pesquisar com outros termos.
-              </p>
-            </div>
+            <EmptyState
+              icon={Search}
+              title="Nenhum deck encontrado"
+              description="Tente pesquisar com outros termos ou criar um novo deck."
+              action={{
+                label: "Criar Novo Deck",
+                onClick: () => setShowCreateDialog(true)
+              }}
+            />
           ) : (
             <>
               <div className="space-y-2">

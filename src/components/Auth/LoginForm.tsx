@@ -53,14 +53,16 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleLogin} className="space-y-4">
+    <form onSubmit={handleLogin} className="space-y-5 relative z-10">
       <div className="space-y-2">
-        <Label htmlFor="login-email">Email</Label>
+        <Label htmlFor="login-email" className="text-sm font-semibold text-foreground">
+          Email
+        </Label>
         <Input
           id="login-email"
           type="email"
           placeholder="seu@email.com"
-          className="bg-grey-50 text-black"
+          className="h-11 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background transition-all"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -68,11 +70,13 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="login-password">Senha</Label>
+        <Label htmlFor="login-password" className="text-sm font-semibold text-foreground">
+          Senha
+        </Label>
         <Input
           id="login-password"
           type="password"
-          className="bg-grey-50 text-black"
+          className="h-11 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background transition-all"
           placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -80,7 +84,11 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
         />
       </div>
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button 
+        type="submit" 
+        className="w-full gradient-primary text-white hover:opacity-90 shadow-lg hover:shadow-xl glow-primary hover-lift transition-all duration-300 font-semibold h-11" 
+        disabled={isLoading}
+      >
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -91,27 +99,36 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
         )}
       </Button>
 
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-card px-2 text-muted-foreground">Ou</span>
+        </div>
+      </div>
+
       <Button
-          type="button"
-          variant="outline"
-          className="w-full flex items-center justify-center gap-2"
-          onClick={async () => {
-            try {
-              const user = await loginWithGoogle();
-              await syncUser.mutateAsync({
-                email: user.email,
-                name: user.email.split("@")[0],
-              });
-              
-              console.log("Usuário logado:", user);
-              onAuthSuccess();
-            } catch (error) {
-              console.error(error);
-            }
-          }}
-        >
-          <FcGoogle className="h-5 w-5" /> Entrar com Google
-        </Button>
+        type="button"
+        variant="outline"
+        className="w-full flex items-center justify-center gap-2 h-11 border-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5 font-semibold transition-all"
+        onClick={async () => {
+          try {
+            const user = await loginWithGoogle();
+            await syncUser.mutateAsync({
+              email: user.email,
+              name: user.email.split("@")[0],
+            });
+            
+            console.log("Usuário logado:", user);
+            onAuthSuccess();
+          } catch (error) {
+            console.error(error);
+          }
+        }}
+      >
+        <FcGoogle className="h-5 w-5" /> Entrar com Google
+      </Button>
     </form>
   );
 }

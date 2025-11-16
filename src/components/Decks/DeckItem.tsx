@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
@@ -45,7 +46,7 @@ interface DeckItemProps {
   isSaving: boolean;
 }
 
-export default function DeckItem({
+function DeckItem({
   deck,
   isEditing,
   editedTitle,
@@ -64,19 +65,36 @@ export default function DeckItem({
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
-      whileHover={{ scale: 1.005 }}
+      whileHover={{ scale: 1.01, y: -2 }}
       whileTap={{ scale: 0.98 }}
+      onClick={(e) => {
+        // Prevenir que o clique no card interfira com os botões
+        const target = e.target as HTMLElement;
+        if (target.closest('button') || target.closest('[role="button"]')) {
+          return;
+        }
+      }}
       transition={{ type: "spring", stiffness: 220, damping: 18 }}
-      className="group relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 md:p-5 border border-border/50 rounded-xl bg-card hover:bg-muted/30 hover:border-primary/30 transition-all duration-200 shadow-sm hover:shadow-md"
+      className="group relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-5 md:p-6 border-2 border-primary/20 rounded-2xl bg-gradient-to-br from-card via-card to-primary/5 hover:border-primary/40 hover:shadow-xl hover-lift transition-all duration-300 shadow-lg overflow-hidden"
+      style={{ isolation: 'isolate' }}
     >
+      {/* Efeito de brilho no hover - Atrás de tudo */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0 pointer-events-none" />
+      
+      {/* Borda colorida lateral baseada no tipo */}
+      <div className={`absolute left-0 top-0 bottom-0 w-1 z-0 ${
+        deck.type === 'quiz' 
+          ? 'bg-gradient-to-b from-accent to-accent/50' 
+          : 'bg-gradient-to-b from-primary to-primary/50'
+      }`} />
       {/* Informações do Deck */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 relative z-20">
         {isEditing ? (
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
             <Input
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
-              className="flex-1 text-sm"
+              className="flex-1 text-sm border-2 border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20"
               autoFocus
             />
             <div className="flex gap-2 sm:shrink-0">
@@ -107,17 +125,17 @@ export default function DeckItem({
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-base text-foreground truncate">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="font-bold text-lg text-foreground truncate bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                 {deck.title}
               </h3>
               {deck.type && (
                 <Badge 
                   variant="outline" 
-                  className={`shrink-0 text-xs ${
+                  className={`shrink-0 text-xs font-semibold px-2 py-0.5 ${
                     deck.type === 'quiz' 
-                      ? 'border-primary/30 bg-primary/5 text-primary' 
-                      : 'border-muted-foreground/30 bg-muted/50 text-muted-foreground'
+                      ? 'border-accent/40 bg-gradient-to-br from-accent/20 to-accent/10 text-accent shadow-sm' 
+                      : 'border-primary/40 bg-gradient-to-br from-primary/20 to-primary/10 text-primary shadow-sm'
                   }`}
                 >
                   {deck.type === 'quiz' ? (
@@ -134,7 +152,7 @@ export default function DeckItem({
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs font-medium text-muted-foreground">
               Criado em {new Date(deck.created_at || "").toLocaleDateString('pt-BR', {
                 day: '2-digit',
                 month: 'short',
@@ -146,17 +164,36 @@ export default function DeckItem({
       </div>
 
       {/* Ações - Alinhadas à direita em desktop */}
-      <div className="flex items-center gap-2 shrink-0">
-        {/* Botão Principal - Estudar */}
+      <div className="flex items-center gap-2 shrink-0 relative z-30">
+        {/* Botão Principal - Estudar - Mais Vibrante */}
         <Button 
-          onClick={onStudy}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow transition-all"
+          onClick={(e) => {
+            e.stopPropagation();
+            onStudy();
+          }}
+          aria-label={`Estudar deck ${deck.title}`}
+          aria-describedby={`deck-${deck.id}-description`}
+          className={`relative z-30 gradient-primary text-white hover:opacity-95 active:opacity-100 shadow-lg hover:shadow-xl glow-primary hover-lift transition-all duration-300 keyboard-navigation min-h-[44px] min-w-[44px] touch-manipulation font-semibold pointer-events-auto [&_span]:text-white [&_span]:font-semibold ${
+            deck.type === 'quiz' ? 'gradient-accent glow-accent' : ''
+          }`}
           size="sm"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              onStudy();
+            }
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
         >
-          <Play className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Estudar</span>
-          <span className="sm:hidden">Iniciar</span>
+          <Play className="h-4 w-4 mr-2 text-white" aria-hidden="true" />
+          <span className="hidden sm:inline text-white font-semibold">Estudar</span>
+          <span className="sm:hidden text-white font-semibold">Iniciar</span>
         </Button>
+        
+        <div id={`deck-${deck.id}-description`} className="sr-only">
+          Deck {deck.type === 'quiz' ? 'de quiz' : 'de flashcards'} criado em {new Date(deck.created_at || "").toLocaleDateString('pt-BR')}
+        </div>
 
         {/* Dropdown Menu para ações secundárias */}
         <DropdownMenu>
@@ -164,7 +201,7 @@ export default function DeckItem({
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 border-border/50 hover:bg-accent"
+              className="relative z-30 h-9 w-9 border-border/50 hover:bg-accent pointer-events-auto"
             >
               <MoreVertical className="h-4 w-4" />
               <span className="sr-only">Mais opções</span>
@@ -215,3 +252,14 @@ export default function DeckItem({
     </motion.div>
   );
 }
+
+// Memoização para evitar re-renders desnecessários
+export default memo(DeckItem, (prevProps, nextProps) => {
+  return (
+    prevProps.deck.id === nextProps.deck.id &&
+    prevProps.deck.title === nextProps.deck.title &&
+    prevProps.isEditing === nextProps.isEditing &&
+    prevProps.editedTitle === nextProps.editedTitle &&
+    prevProps.isSaving === nextProps.isSaving
+  );
+});

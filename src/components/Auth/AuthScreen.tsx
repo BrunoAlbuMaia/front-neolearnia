@@ -10,74 +10,97 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
   const [isLogin, setIsLogin] = useState(true);
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 bg-gradient-to-br from-indigo-50 via-white to-slate-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 overflow-hidden">
+    <div className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 bg-gradient-to-br from-background via-primary/5 to-accent/5 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 overflow-hidden">
       
-      {/* Fundo animado leve */}
+      {/* Fundo animado vibrante */}
       <motion.div
-        className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.12),transparent_60%)]"
+        className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,hsl(262,83%,58%,0.15),transparent_60%)]"
         animate={{ opacity: [0.7, 1, 0.7] }}
         transition={{ duration: 10, repeat: Infinity }}
       />
+      
+      {/* Gradiente adicional para profundidade */}
+      <motion.div
+        className="absolute inset-0 bg-[radial-gradient(circle_at_70%_70%,hsl(187,85%,55%,0.12),transparent_60%)]"
+        animate={{ opacity: [0.5, 0.8, 0.5] }}
+        transition={{ duration: 8, repeat: Infinity, delay: 1 }}
+      />
+      
+      {/* Padrão de grid sutil */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.05]" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-sm sm:max-w-md backdrop-blur-xl bg-white/80 dark:bg-gray-900/60 shadow-2xl rounded-2xl p-6 sm:p-8 space-y-6 relative z-10"
+        className="w-full max-w-sm sm:max-w-md backdrop-blur-xl bg-card/90 dark:bg-card/80 shadow-2xl rounded-3xl p-6 sm:p-8 space-y-6 relative z-10 border-2 border-primary/20 hover:border-primary/30 transition-all duration-300"
       >
-        {/* Branding */}
-        <div className="text-center mt-6">
+        {/* Efeito de brilho sutil no card */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 rounded-3xl opacity-50" />
+        {/* Branding - Mais Vibrante */}
+        <div className="text-center mt-6 relative z-10">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1.15, opacity: 1 }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 80, damping: 8 }}
             className="mx-auto relative flex items-center justify-center mb-6"
           >
-            {/* Glow pulsante por trás da logo */}
-            <div className="absolute w-64 h-64 sm:w-44 sm:h-44 bg-indigo-500/30 blur-3xl rounded-full animate-pulse" />
+            {/* Glow pulsante vibrante por trás da logo */}
+            <motion.div 
+              className="absolute w-64 h-64 sm:w-44 sm:h-44 bg-gradient-to-br from-primary/40 to-accent/40 blur-3xl rounded-full"
+              animate={{ 
+                scale: [1, 1.1, 1],
+                opacity: [0.4, 0.6, 0.4]
+              }}
+              transition={{ duration: 3, repeat: Infinity }}
+            />
 
             {/* Logo em destaque */}
             <img
               src={logo_mymemorize}
               alt="logo_mymemorize"
-              className="relative w-48 h-48 sm:w-32 sm:h-32 object-contain drop-shadow-[0_0_25px_rgba(99,102,241,0.6)] transition-transform duration-500 hover:scale-110"
+              className="relative w-48 h-48 sm:w-32 sm:h-32 object-contain drop-shadow-[0_0_30px_hsl(262,83%,58%,0.5)] transition-transform duration-500 hover:scale-110 z-10"
             />
           </motion.div>
 
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-            <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-              My<span className="text-indigo-500">Memorize</span>
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
+            <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient">
+              My<span className="text-primary">Memorize</span>
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 mt-3">
+          <p className="text-base sm:text-lg text-muted-foreground mt-3 font-medium">
             Flashcards inteligentes com IA
           </p>
         </div>
 
 
-        {/* Tabs */}
-        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 text-sm">
-          <button
+        {/* Tabs - Mais Modernas */}
+        <div className="relative z-10 flex bg-muted/50 rounded-xl p-1.5 text-sm border border-primary/10">
+          <motion.button
             onClick={() => setIsLogin(true)}
-            className={`flex-1 py-2 rounded-md transition-all font-medium ${
+            className={`relative flex-1 py-2.5 rounded-lg transition-all font-semibold z-10 ${
               isLogin
-                ? "bg-white dark:bg-gray-700 shadow text-indigo-600"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg"
+                : "text-muted-foreground hover:text-foreground"
             }`}
+            whileHover={{ scale: isLogin ? 1 : 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             Login
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={() => setIsLogin(false)}
-            className={`flex-1 py-2 rounded-md transition-all font-medium ${
+            className={`relative flex-1 py-2.5 rounded-lg transition-all font-semibold z-10 ${
               !isLogin
-                ? "bg-white dark:bg-gray-700 shadow text-indigo-600"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg"
+                : "text-muted-foreground hover:text-foreground"
             }`}
+            whileHover={{ scale: !isLogin ? 1 : 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             Cadastro
-          </button>
+          </motion.button>
         </div>
 
         {/* Formulário */}
@@ -108,9 +131,9 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
         </div>
 
         {/* Termos */}
-        <p className="text-center text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+        <p className="relative z-10 text-center text-xs text-muted-foreground leading-relaxed">
           Ao continuar, você concorda com nossos{" "}
-          <span className="text-indigo-500 hover:underline cursor-pointer">
+          <span className="text-primary hover:text-accent hover:underline cursor-pointer font-medium transition-colors">
             termos de uso
           </span>.
         </p>
