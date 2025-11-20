@@ -23,7 +23,7 @@ import {
 export default function ReviewMode() {
   const [, setLocation] = useLocation();
   const { data: flashcards, isLoading, error } = useReviews();
-  const { data: decks = [] } = useFlashcardSets();
+  const { data: decks } = useFlashcardSets();
   const { toast } = useToast();
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -31,19 +31,27 @@ export default function ReviewMode() {
 
   const navigateToHome = () => setLocation("/");
 
+  // Garantir que decks seja sempre um array (proteção contra cache limpo)
+  const safeDecks = useMemo(() => {
+    if (!decks || !Array.isArray(decks)) {
+      return [];
+    }
+    return decks;
+  }, [decks]);
+
   // Enriquecer flashcards com a cor do deck baseado no nome
   const flashcardsWithColor = useMemo(() => {
-    if (!flashcards || flashcards.length === 0) return [];
+    if (!flashcards || !Array.isArray(flashcards) || flashcards.length === 0) return [];
     
     return flashcards.map((card: ReviewCard) => {
       // Buscar o deck pelo nome para pegar a cor
-      const deck = decks.find((d: any) => d.title === card.name_deck);
+      const deck = safeDecks.find((d: any) => d.title === card.name_deck);
       return {
         ...card,
         color: deck?.color || "#7CFC00", // Cor padrão
       };
     });
-  }, [flashcards, decks]);
+  }, [flashcards, safeDecks]);
 
   // Pega a cor do deck do card atual
   const currentCard = flashcardsWithColor[currentCardIndex];
@@ -54,17 +62,43 @@ export default function ReviewMode() {
   };
 
   useEffect(() => {
-    console.log(error)
-    if (error != null) {
+    if (error) {
+      console.error("Erro ao carregar revisões:", error);
       toast({
         title: "Erro ao carregar revisões",
-        description: "Não foi possível carregar os flashcards.",
+        description: "Não foi possível carregar os flashcards. Tente novamente.",
         variant: "destructive",
       });
     }
-  }, [error]);
+  }, [error, toast]);
 
-  if (isLoading) return <div className="p-6 text-center">Carregando revisões...</div>;
+  // Resetar índice quando os flashcards mudarem ou quando o índice estiver inválido
+  useEffect(() => {
+    if (flashcardsWithColor && flashcardsWithColor.length > 0) {
+      // Se o índice atual está fora do range, resetar para 0
+      if (currentCardIndex >= flashcardsWithColor.length) {
+        setCurrentCardIndex(0);
+      }
+      setIsFlipped(false);
+    } else if (flashcardsWithColor.length === 0) {
+      // Se não há flashcards, resetar índice
+      setCurrentCardIndex(0);
+    }
+  }, [flashcardsWithColor, currentCardIndex]);
+
+  // Loading state com UI melhor
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando revisões...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Estado vazio com UI melhor
   if (!flashcardsWithColor || flashcardsWithColor.length === 0)
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-background to-muted px-6 text-center">
@@ -94,7 +128,22 @@ export default function ReviewMode() {
       </div>
     );
   
-  const progress = currentCard ? ((currentCardIndex + 1) / flashcardsWithColor.length) * 100 : 0;
+  // Proteção: garantir que temos dados válidos antes de renderizar
+  // Se não há card atual mas há flashcards, pode ser índice inválido ou dados ainda carregando
+  if (!currentCard && flashcardsWithColor.length > 0) {
+    // Se o índice está fora do range, o useEffect acima vai corrigir
+    // Mas enquanto isso, mostrar loading para evitar tela preta
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Preparando revisão...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const progress = ((currentCardIndex + 1) / flashcardsWithColor.length) * 100;
 
   const handleFlip = () => setIsFlipped(!isFlipped);
 

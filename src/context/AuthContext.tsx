@@ -17,6 +17,7 @@ import {
 } from "../lib/firebase/session";
 // import { authApi } from "../api/authApi";
 import { useToast } from "../hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AuthContextValue {
   user: User | null;
@@ -26,7 +27,8 @@ interface AuthContextValue {
   logoutUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+// Exporta o contexto para uso direto quando necessário (ex: SessionGuard)
+export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -37,6 +39,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isLoggingOut = useRef(false);
   const isSyncing = useRef(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Rastreia o UID do usuário anterior para detectar mudanças
+  const previousUserIdRef = useRef<string | null>(null);
 
   /**
    * Sincroniza usuário com backend e cria sessão única
@@ -50,9 +56,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isSyncing.current = true;
 
     try {
-      const token = await firebaseUser.getIdToken();
+      // CRÍTICO: Aguarda o token estar totalmente processado após login
+      // O Firebase pode precisar de um momento para processar o token na primeira vez
+      let token: string | null = null;
+      let attempts = 0;
+      const maxAttempts = 5;
+      
+      while (!token && attempts < maxAttempts) {
+        try {
+          token = await firebaseUser.getIdToken(true); // Force refresh
+          if (token) break;
+        } catch (tokenError) {
+          console.log(`⏳ Tentativa ${attempts + 1}/${maxAttempts} de obter token...`);
+        }
+        
+        if (!token && attempts < maxAttempts - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        attempts++;
+      }
+      
+      if (!token) {
+        throw new Error("Não foi possível obter o token de autenticação após múltiplas tentativas.");
+      }
+      
       const newSessionId = getOrCreateSessionId();
-
 
       // const response = await authApi.syncUser({
       //   email: firebaseUser.email || "",
@@ -62,6 +90,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setSessionId(newSessionId);
       setIsSessionValid(true);
+      
+      // CRÍTICO: Aguarda um momento adicional para garantir que o token está totalmente processado
+      // antes de permitir que outras requisições sejam feitas
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
 
     } catch (error: any) {
@@ -86,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Função de logout otimizada
+   * CRÍTICO: Limpa todo o cache do React Query para evitar dados de usuários anteriores
    */
   const logoutUser = useCallback(async () => {
     if (isLoggingOut.current) {
@@ -103,10 +136,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSessionId(null);
       setIsSessionValid(false);
       
+      // CRÍTICO: Remove todas as queries do cache
+      // Isso garante que dados do usuário anterior não sejam exibidos
+      queryClient.removeQueries();
+      
       // Faz logout do Firebase
       await logout();
       
       setUser(null);
+      previousUserIdRef.current = null;
 
       
     } catch (err) {
@@ -115,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       isLoggingOut.current = false;
     }
-  }, []);
+  }, [queryClient]);
 
   /**
    * Listener para evento de sessão inválida (disparado pelo apiRequest)
@@ -144,10 +182,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Gerenciamento principal de autenticação
+   * CRÍTICO: Detecta mudanças de usuário e limpa/invalida queries quando necessário
    */
   useEffect(() => {
     const unsubscribeAuth = onAuthChange(async (firebaseUser) => {
-
+      const currentUserId = firebaseUser?.uid || null;
+      
+      // Detecta mudança de usuário (login com outro usuário)
+      if (previousUserIdRef.current !== null && 
+          previousUserIdRef.current !== currentUserId && 
+          currentUserId !== null) {
+        console.log("🔄 Mudança de usuário detectada - limpando cache...");
+        // Remove todas as queries quando detecta mudança de usuário
+        queryClient.removeQueries();
+      }
+      
+      // Atualiza referência do usuário atual
+      previousUserIdRef.current = currentUserId;
       
       setUser(firebaseUser);
       setLoading(false);
@@ -157,11 +208,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearSessionId();
         setSessionId(null);
         setIsSessionValid(false);
+        // Remove queries quando não há usuário (logout)
+        queryClient.removeQueries();
         return;
       }
 
       // Se há usuário, sincroniza com backend
       await syncUserWithBackend(firebaseUser);
+      
+      // CRÍTICO: Aguarda um momento adicional após sincronização
+      // Isso garante que o token está totalmente processado antes de fazer requisições
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // CRÍTICO: Após sincronizar e aguardar, invalida todas as queries para forçar refetch
+      // Isso garante que os dados do novo usuário sejam carregados com token válido
+      queryClient.invalidateQueries();
     });
 
     // Cleanup
@@ -169,7 +230,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  
       unsubscribeAuth();
     };
-  }, [syncUserWithBackend]);
+  }, [syncUserWithBackend, queryClient]);
 
   /**
    * Validação periódica da sessão (heartbeat visual)

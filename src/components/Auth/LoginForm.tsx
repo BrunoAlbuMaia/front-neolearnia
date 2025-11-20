@@ -8,6 +8,7 @@ import { useToast } from "../../hooks/use-toast";
 import { useSyncUser } from "../../hooks/useAuth";
 import { loginWithGoogle } from "../../lib/firebase/auth";
 import { FcGoogle } from "react-icons/fc";
+import { getOrCreateSessionId } from "../../lib/firebase/session";
 
 interface LoginFormProps {
   onAuthSuccess: () => void;
@@ -20,19 +21,40 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await loginWithEmail(email, password);
-      await syncUser.mutateAsync({ email, name: email.split("@")[0] });
+      // 1. Autentica com email/senha (Firebase)
+      const userCredential = await loginWithEmail(email, password);
+      const user = userCredential.user;
+
+      if (!user.email) {
+        throw new Error("Não foi possível obter o email do usuário.");
+      }
+
+      // 2. Garante que o sessionId existe (será enviado automaticamente via header)
+      getOrCreateSessionId();
+
+      // 3. Sincroniza com backend - CRÍTICO: aguarda conclusão antes de prosseguir
+      await syncUser.mutateAsync({
+        email: user.email,
+        name: user.displayName || email.split("@")[0] || "Usuário",
+      });
+
+      // 4. Aguarda um momento para garantir que o AuthContext processou a mudança
+      // Isso evita race conditions entre o sync manual e o listener do AuthContext
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       toast({
         title: "Login realizado com sucesso!",
-        description: "Bem-vindo de volta ao MyMemorize",
+        description: `Bem-vindo${user.displayName ? `, ${user.displayName}` : ""} de volta ao MyMemorize`,
       });
+
+      // 5. Só então chama onAuthSuccess após garantir que tudo foi sincronizado
       onAuthSuccess();
     } catch (error: any) {
       let errorMessage =
@@ -40,7 +62,11 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
           ? "Usuário não encontrado."
           : error.code === "auth/wrong-password"
           ? "Senha incorreta."
-          : "Ocorreu um erro. Tente novamente.";
+          : error.code === "auth/invalid-email"
+          ? "Email inválido."
+          : error.code === "auth/too-many-requests"
+          ? "Muitas tentativas. Aguarde um momento e tente novamente."
+          : error.message || "Ocorreu um erro. Tente novamente.";
 
       toast({
         title: "Erro no login",
@@ -112,22 +138,89 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
         type="button"
         variant="outline"
         className="w-full flex items-center justify-center gap-2 h-11 border-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5 font-semibold transition-all"
+        disabled={isLoadingGoogle || isLoading}
         onClick={async () => {
+          setIsLoadingGoogle(true);
+          
           try {
+            // 1. Autentica com Google (Firebase)
             const user = await loginWithGoogle();
+            
+            if (!user.email) {
+              throw new Error("Não foi possível obter o email do Google.");
+            }
+
+            // 2. Aguarda o token estar disponível (importante para primeira autenticação)
+            // O Firebase pode precisar de um momento para processar o token na primeira vez
+            let attempts = 0;
+            let token: string | null = null;
+            while (!token && attempts < 5) {
+              try {
+                token = await user.getIdToken();
+              } catch {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                attempts++;
+              }
+            }
+
+            if (!token) {
+              throw new Error("Não foi possível obter o token de autenticação. Tente novamente.");
+            }
+
+            // 3. Garante que o sessionId existe (será enviado automaticamente via header)
+            getOrCreateSessionId();
+
+            // 4. Sincroniza com backend - CRÍTICO: aguarda conclusão antes de prosseguir
             await syncUser.mutateAsync({
               email: user.email,
-              name: user.email.split("@")[0],
+              name: user.displayName || user.email.split("@")[0] || "Usuário",
             });
-            
-            console.log("Usuário logado:", user);
+
+            // 5. Aguarda um momento para garantir que o AuthContext processou a mudança
+            // Isso evita race conditions entre o sync manual e o listener do AuthContext
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            toast({
+              title: "Login realizado com sucesso!",
+              description: `Bem-vindo${user.displayName ? `, ${user.displayName}` : ""} ao MyMemorize`,
+            });
+
+            // 6. Só então chama onAuthSuccess após garantir que tudo foi sincronizado
             onAuthSuccess();
-          } catch (error) {
-            console.error(error);
+          } catch (error: any) {
+            console.error("Erro no login com Google:", error);
+            
+            let errorMessage = "Ocorreu um erro ao fazer login com Google. Tente novamente.";
+            
+            if (error.code === "auth/popup-closed-by-user") {
+              errorMessage = "Login cancelado. Tente novamente quando estiver pronto.";
+            } else if (error.code === "auth/popup-blocked") {
+              errorMessage = "Popup bloqueado. Permita popups para este site e tente novamente.";
+            } else if (error.code === "auth/network-request-failed") {
+              errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+            } else if (error.message) {
+              errorMessage = error.message;
+            }
+
+            toast({
+              title: "Erro no login",
+              description: errorMessage,
+              variant: "destructive",
+            });
+          } finally {
+            setIsLoadingGoogle(false);
           }
         }}
       >
-        <FcGoogle className="h-5 w-5" /> Entrar com Google
+        {isLoadingGoogle ? (
+          <>
+            <Loader2 className="h-5 w-5 animate-spin" /> Entrando com Google...
+          </>
+        ) : (
+          <>
+            <FcGoogle className="h-5 w-5" /> Entrar com Google
+          </>
+        )}
       </Button>
     </form>
   );

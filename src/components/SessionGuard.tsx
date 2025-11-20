@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useEffect, useState, useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 import { AlertCircle, LogOut } from 'lucide-react';
 
 /**
@@ -7,7 +7,15 @@ import { AlertCircle, LogOut } from 'lucide-react';
  * Deve ser incluído no AppProviders ou layout principal
  */
 export function SessionGuard() {
-  const { user, isSessionValid } = useAuth();
+  // Usa useContext diretamente para evitar erro se o provider não estiver pronto
+  const authContext = useContext(AuthContext);
+  
+  // Se o contexto não estiver disponível, não renderiza nada
+  if (!authContext) {
+    return null;
+  }
+  
+  const { user, isSessionValid } = authContext;
   const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {

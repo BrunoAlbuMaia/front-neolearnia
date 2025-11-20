@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import AuthScreen from "../../components/Auth/AuthScreen";
@@ -24,6 +24,35 @@ export default function Home() {
   const { toast } = useToast();
   const { userState, isLoading: userLoading } = useUser();
 
+  // Memoizar parsedUserState para evitar recálculos desnecessários
+  const parsedUserState = useMemo(() => {
+    if (!userState) return null;
+    return Array.isArray(userState)
+      ? {
+          id: userState[0],
+          user_id: userState[1],
+          focus_area: userState[2],
+          learning_style: userState[3],
+          ai_level: userState[4],
+          motivation: userState[5],
+          preferred_schedule: userState[6],
+          created_at: userState[7],
+          has_onboarded: true
+        }
+      : userState;
+  }, [userState]);
+
+  // Limpa estado local quando o usuário muda ou faz logout
+  useEffect(() => {
+    if (!authUser) {
+      // Limpa estado local quando não há usuário (logout)
+      setStudyFlashcards([]);
+      setStudyQuizzes([]);
+      setQuizDeckColor("#3B82F6");
+      setCurrentScreen('auth');
+    }
+  }, [authUser]);
+
   // Determina o screen inicial baseado no estado do AuthContext
   useEffect(() => {
     // Se não há usuário, mostra tela de auth imediatamente (mesmo durante loading)
@@ -44,20 +73,6 @@ export default function Home() {
     }
 
     // Processa o userState para determinar a tela
-    const parsedUserState = Array.isArray(userState)
-      ? {
-          id: userState[0],
-          user_id: userState[1],
-          focus_area: userState[2],
-          learning_style: userState[3],
-          ai_level: userState[4],
-          motivation: userState[5],
-          preferred_schedule: userState[6],
-          created_at: userState[7],
-          has_onboarded: true
-        }
-      : userState;
-
     if (parsedUserState) {
       if (!parsedUserState.has_onboarded) {
         setCurrentScreen('onboarding');
@@ -68,29 +83,30 @@ export default function Home() {
       // Se não há userState ainda, mostra dashboard (assumindo que será carregado)
       setCurrentScreen('dashboard');
     }
-  }, [authUser, authLoading, userState, userLoading]);
+  }, [authUser, authLoading, parsedUserState, userLoading]);
 
-  const handleAuthSuccess = () => {
+  // Memoizar callbacks para evitar re-renders desnecessários
+  const handleAuthSuccess = useCallback(() => {
     // Após login bem-sucedido, o AuthContext atualizará e o useEffect acima determinará a tela correta
     // Por enquanto, forçamos dashboard (será ajustado pelo useEffect baseado no userState)
     setCurrentScreen('dashboard');
-  };
+  }, []);
   
-  const handleStartStudy = (flashcards: Flashcard[]) => {
+  const handleStartStudy = useCallback((flashcards: Flashcard[]) => {
     setStudyFlashcards(flashcards);
     setCurrentScreen('study');
-  };
+  }, []);
 
-  const handleStartQuiz = (quizzes: Quiz[], deckColor?: string) => {
+  const handleStartQuiz = useCallback((quizzes: Quiz[], deckColor?: string) => {
     setStudyQuizzes(quizzes);
     setQuizDeckColor(deckColor || "#3B82F6");
     setCurrentScreen('quiz');
-  };
+  }, []);
   
-  const handleBackToDashboard = () => setCurrentScreen('dashboard');
-  const handleNavigateToAnalytics = () => setCurrentScreen('analytics');
+  const handleBackToDashboard = useCallback(() => setCurrentScreen('dashboard'), []);
+  const handleNavigateToAnalytics = useCallback(() => setCurrentScreen('analytics'), []);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       await logoutUser();
       toast({
@@ -104,9 +120,10 @@ export default function Home() {
         variant: "destructive",
       });
     }
-  };
+  }, [logoutUser, toast]);
 
-  const renderScreen = () => {
+  // Memoizar renderScreen para evitar recriação a cada render
+  const renderScreen = useMemo(() => {
     switch (currentScreen) {
       case 'auth':
         return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
@@ -123,9 +140,7 @@ export default function Home() {
           </div>
         );
       case 'onboarding':
-        return(
-          <OnboardingScreen></OnboardingScreen>
-        )
+        return <OnboardingScreen />;
       default:
         return (
           <Dashboard 
@@ -137,7 +152,7 @@ export default function Home() {
           />
         );
     }
-  };
+  }, [currentScreen, handleAuthSuccess, studyFlashcards, studyQuizzes, quizDeckColor, handleBackToDashboard, handleLogout, handleStartStudy, handleStartQuiz, handleNavigateToAnalytics, authUser]);
 
   // Mostra loading apenas se há usuário mas ainda está carregando
   // Se não há usuário, sempre mostra auth (não mostra loading)
@@ -165,7 +180,7 @@ export default function Home() {
           transition={{ duration: 0.35, ease: "easeInOut" }}
           className="relative w-full"
         >
-          {renderScreen()}
+          {renderScreen}
         </motion.div>
       </AnimatePresence>
     </div>

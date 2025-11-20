@@ -59,14 +59,28 @@ export const getCurrentUser = (): User | null => {
 
 /**
  * Retorna token de autenticação do usuário atual
+ * Com retry logic para garantir que o token esteja disponível após login
  */
-export const getCurrentUserToken = async (): Promise<string | null> => {
+export const getCurrentUserToken = async (forceRefresh: boolean = false): Promise<string | null> => {
   if (!auth.currentUser) return null;
   
   try {
-    return await auth.currentUser.getIdToken();
+    // Se forceRefresh, força atualização do token (útil após login)
+    return await auth.currentUser.getIdToken(forceRefresh);
   } catch (error) {
     console.error("Erro ao obter token:", error);
+    
+    // Se falhou e não é forceRefresh, tenta novamente após um pequeno delay
+    if (!forceRefresh) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      try {
+        return await auth.currentUser.getIdToken(true);
+      } catch (retryError) {
+        console.error("Erro ao obter token no retry:", retryError);
+        return null;
+      }
+    }
+    
     return null;
   }
 };

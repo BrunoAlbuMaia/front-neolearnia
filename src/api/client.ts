@@ -1,4 +1,5 @@
 import { getCurrentUserToken, logout } from '../lib/firebase/auth';
+import { auth } from '../lib/firebase/config';
 import { getSessionId } from '../lib/firebase/session';
 
 const API_BASE_URL = import.meta.env.VITE_LINK_API;
@@ -47,9 +48,17 @@ export async function apiRequest<T>(
 
   // ✅ Adiciona token de autenticação
   if (requiresAuth) {
-    const token = await getCurrentUserToken();
+    // Força refresh do token para garantir que está atualizado
+    const token = await getCurrentUserToken(true);
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      // Se não conseguiu obter token, aguarda um pouco e tenta novamente
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const retryToken = await getCurrentUserToken(true);
+      if (retryToken) {
+        headers['Authorization'] = `Bearer ${retryToken}`;
+      }
     }
   }
 
@@ -83,6 +92,45 @@ export async function apiRequest<T>(
       throw new ApiError(401, 'Sessão inválida: Outro dispositivo fez login nesta conta');
     }
 
+    // Tratamento especial para 401 - pode ser token ainda não pronto após login
+    if (response.status === 401) {
+      // Se for 401 e tiver usuário logado, tenta refresh do token e retry uma vez
+      const currentUser = auth.currentUser;
+      if (currentUser && requiresAuth) {
+        try {
+          console.log("🔄 401 detectado - tentando refresh do token e retry...");
+          // Força refresh do token
+          await currentUser.getIdToken(true);
+          // Aguarda um momento para o token ser processado
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Retry da requisição com novo token
+          const retryToken = await getCurrentUserToken(true);
+          if (retryToken) {
+            const retryHeaders = { ...headers, 'Authorization': `Bearer ${retryToken}` };
+            const retryConfig = { ...config, headers: retryHeaders };
+            const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, retryConfig);
+            
+            if (retryResponse.ok) {
+              if (retryResponse.status === 204) {
+                stopLoading();
+                return {} as T;
+              }
+              const retryResult = await retryResponse.json();
+              stopLoading();
+              return retryResult;
+            }
+          }
+        } catch (retryError) {
+          console.error("❌ Erro no retry após 401:", retryError);
+        }
+      }
+      
+      // Se retry falhou ou não há usuário, faz logout
+      await logout();
+      throw new ApiError(401, 'Não autorizado. Faça login novamente.');
+    }
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const errorMessage = errorData.message || response.statusText || 'Erro na requisição';
@@ -92,10 +140,6 @@ export async function apiRequest<T>(
     // Se resposta for 204 No Content, retorna objeto vazio
     if (response.status === 204) {
       return {} as T;
-    }
-
-    if (response.status === 401){
-      await logout()
     }
 
     const result = await response.json();
