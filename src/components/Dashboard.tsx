@@ -175,26 +175,17 @@ export default function Dashboard({
       </Dialog>
 
       <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8">
-        {/* Header Melhorado - Mais Vibrante */}
+        {/* Header - Design Limpo e Profissional */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-3xl gradient-primary p-8 md:p-10 shadow-2xl glow-primary"
+          className="relative overflow-hidden rounded-3xl bg-card border border-border p-8 md:p-10 shadow-lg"
         >
-          {/* Efeito de brilho animado */}
-          <div className="absolute inset-0 shine-effect opacity-30" />
-          
-          {/* Padrão de grid sutil */}
-          <div className="absolute inset-0 bg-grid-pattern opacity-10" />
-          
-          {/* Gradiente radial para profundidade */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent" />
-          
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight drop-shadow-lg">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
               Bem-vindo de volta! 👋
             </h2>
-            <p className="text-base md:text-lg text-white/90 font-medium">
+            <p className="text-base md:text-lg text-muted-foreground font-medium">
               Continue de onde parou ou crie novos decks de estudo
             </p>
           </div>

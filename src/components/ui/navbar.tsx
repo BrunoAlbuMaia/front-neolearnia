@@ -2,7 +2,7 @@
 import { Button } from "./button";
 import { ThemeToggle } from "../ThemeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "./sheet"; 
-import { Brain, BarChart3, LogOut, Menu, Home, Settings, CircleArrowOutDownLeftIcon, Crown } from "lucide-react";
+import { BarChart3, LogOut, Menu, Home, CircleArrowOutDownLeftIcon, Crown } from "lucide-react";
 import React, { useMemo } from "react";
 import { useLocation } from "wouter";
 import logo_mymemorize from "../../assets/logo_mymemorize.png";
@@ -13,7 +13,6 @@ interface SidebarProps {
   onNavigateToReviewMode:() => void;
   onNavigateToDashboard: () => void;
   onNavigateToHome: () => void;
-  onNavigateToSettings: () => void;
   onNavigateToPlans: () => void;
   onNavigateToAnalytics?: () => void;
 }
@@ -41,13 +40,13 @@ const NavLink = ({ name, Icon, onClick, isActive, dataTestId }: NavLinkProps) =>
     variant="ghost"
     className={`w-full justify-start text-base py-2.5 px-4 rounded-lg transition-all duration-300 font-medium
       ${isActive 
-        ? 'gradient-primary text-white shadow-lg glow-primary' 
-        : 'text-muted-foreground hover:text-primary hover:bg-gradient-to-r hover:from-primary/10 hover:to-accent/10 hover:border-l-2 hover:border-primary'
+        ? 'bg-primary text-primary-foreground shadow-md' 
+        : 'text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-l-2 hover:border-primary'
       }`}
     onClick={onClick}
     data-testid={dataTestId}
   >
-    <Icon className={`h-5 w-5 mr-3 ${isActive ? 'text-white' : ''}`} />
+    <Icon className={`h-5 w-5 mr-3 ${isActive ? 'text-primary-foreground' : ''}`} />
     {name}
   </Button>
 );
@@ -58,7 +57,6 @@ export default function Sidebar({
   onNavigateToReviewMode,
   onNavigateToDashboard, 
   onNavigateToHome,
-  onNavigateToSettings,
   onNavigateToPlans,
   onNavigateToAnalytics
 }: SidebarProps) {
@@ -210,7 +208,7 @@ export default function Sidebar({
             variant="default"
             size="sm"
             onClick={onNavigateToPlans}
-            className="gradient-primary text-white hover:opacity-90 shadow-lg hover:shadow-xl glow-primary hover-lift transition-all duration-300 hidden sm:flex items-center gap-2 font-semibold"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300 hidden sm:flex items-center gap-2 font-semibold"
             data-testid="navbar-button-plans"
           >
             <Crown className="h-4 w-4" />

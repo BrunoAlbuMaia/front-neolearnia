@@ -91,56 +91,58 @@
 }*/
 
 :root {
-  --background: hsl(33, 52%, 96%);
-  --foreground: hsl(222.2, 84%, 4.9%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(222.2, 84%, 4.9%);
+  /* Background - Tom mais escuro para melhor contraste (inspirado em Linear/Vercel) */
+  --background: hsl(0, 0%, 97%); /* Quase branco mas com leve tom - melhor contraste */
+  --foreground: hsl(222.2, 47.4%, 11.2%); /* Gray 900 - mais escuro para legibilidade */
+  --card: hsl(0, 0%, 100%); /* Branco puro para cards - destaca do background */
+  --card-foreground: hsl(222.2, 47.4%, 11.2%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(222.2, 84%, 4.9%);
+  --popover-foreground: hsl(222.2, 47.4%, 11.2%);
   
-  /* Primary - Azul vibrante e moderno */
-  --primary: hsl(262, 83%, 58%);
-  --primary-foreground: hsl(0, 0%, 100%);
+  /* Primary - Azul Confiável (Blue 600) - Profissional e confiável */
+  --primary: hsl(221.2, 83.2%, 53.3%); /* #2563EB */
+  --primary-foreground: hsl(0, 0%, 100%); /* Branco para melhor contraste */
   
-  /* Secondary - Roxo suave */
-  --secondary: hsl(270, 50%, 96%);
-  --secondary-foreground: hsl(262, 83%, 58%);
+  /* Secondary - Cinza médio para melhor visibilidade */
+  --secondary: hsl(210, 20%, 92%); /* Gray 200 - mais visível que Gray 100 */
+  --secondary-foreground: hsl(222.2, 47.4%, 11.2%);
   
-  /* Muted - Tons neutros suaves */
-  --muted: hsl(240, 15%, 96%);
-  --muted-foreground: hsl(215.4, 16.3%, 46.9%);
+  /* Muted - Tons neutros com melhor contraste */
+  --muted: hsl(210, 20%, 96%); /* Gray 100 - mais visível */
+  --muted-foreground: hsl(215.4, 16.3%, 46.9%); /* Gray 500 - #6B7280 */
   
-  /* Accent - Ciano vibrante para contraste */
-  --accent: hsl(187, 85%, 55%);
-  --accent-foreground: hsl(0, 0%, 100%);
+  /* Accent - Verde Sucesso (Emerald 500) */
+  --accent: hsl(159.7826, 100%, 36.0784%); /* #10B981 */
+  --accent-foreground: hsl(210, 40%, 98%);
   
   /* Destructive - Vermelho vibrante */
   --destructive: hsl(0, 84.2%, 60.2%);
   --destructive-foreground: hsl(0, 0%, 100%);
   
-  /* Border e Input */
-  --border: hsl(240, 15%, 90%);
-  --input: hsl(240, 15%, 96%);
+  /* Border e Input - Mais visíveis para melhor definição */
+  --border: hsl(214.3, 31.8%, 88%); /* Gray 300 - mais escuro para melhor visibilidade */
+  --input: hsl(0, 0%, 100%); /* Branco para inputs - destaca do background */
   
-  /* Ring - Cor de foco vibrante */
-  --ring: hsl(262, 83%, 58%); 
+  /* Ring - Cor de foco (Primary) */
+  --ring: hsl(221.2, 83.2%, 53.3%); 
   
 
-  /* Cores vibrantes para gráficos */
-  --chart-1: hsl(262, 83%, 58%); 
-  --chart-2: hsl(187, 85%, 55%); 
-  --chart-3: hsl(142, 76%, 50%); 
-  --chart-4: hsl(45, 93%, 58%); 
-  --chart-5: hsl(341, 75%, 55%); 
+  /* Cores para gráficos - Menos saturadas, mais profissionais */
+  --chart-1: hsl(221.2, 83.2%, 53.3%); /* Blue 600 */
+  --chart-2: hsl(159.7826, 100%, 36.0784%); /* Emerald 500 */
+  --chart-3: hsl(42.0290, 92.8251%, 56.2745%); /* Amber 500 */
+  --chart-4: hsl(147.1429, 78.5047%, 41.9608%); /* Green 600 */
+  --chart-5: hsl(341.4894, 75.2000%, 50.9804%); /* Rose 500 */ 
   
-  --sidebar: hsl(240, 15%, 98%);
-  --sidebar-foreground: hsl(222.2, 84%, 4.9%);
-  --sidebar-primary: hsl(262, 83%, 58%);
+  /* Sidebar - Tom levemente diferente do background para separação visual */
+  --sidebar: hsl(0, 0%, 99%); /* Quase branco mas diferente do background */
+  --sidebar-foreground: hsl(222.2, 47.4%, 11.2%);
+  --sidebar-primary: hsl(221.2, 83.2%, 53.3%);
   --sidebar-primary-foreground: hsl(0, 0%, 100%);
-  --sidebar-accent: hsl(187, 85%, 55%);
+  --sidebar-accent: hsl(221.2, 83.2%, 53.3%); /* Usar primary ao invés de violet */
   --sidebar-accent-foreground: hsl(0, 0%, 100%);
-  --sidebar-border: hsl(240, 15%, 90%);
-  --sidebar-ring: hsl(262, 83%, 58%);
+  --sidebar-border: hsl(214.3, 31.8%, 88%); /* Gray 300 - mais visível */
+  --sidebar-ring: hsl(221.2, 83.2%, 53.3%);
   
   --font-sans: Inter, system-ui, sans-serif;
   --font-serif: Georgia, serif;
@@ -150,59 +152,64 @@
 }
 
 .dark {
-  --background: hsl(180, 4%, 5%);
-  --foreground: hsl(0, 0%, 95%);
-  --card: hsl(240, 12%, 12%);
-  --card-foreground: hsl(0, 0%, 95%);
-  --popover: hsl(240, 15%, 8%);
-  --popover-foreground: hsl(0, 0%, 95%);
+  /* Background e Foreground - Dark Mode */
+  --background: hsl(222.2, 47.4%, 11.2%); /* Gray 900 */
+  --foreground: hsl(210, 40%, 98%); /* Gray 50 */
+  --card: hsl(222.2, 47.4%, 11.2%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --popover: hsl(222.2, 47.4%, 11.2%);
+  --popover-foreground: hsl(210, 40%, 98%);
   
-  /* Primary - Roxo vibrante para dark mode */
-  --primary: hsl(262, 83%, 65%);
-  --primary-foreground: hsl(0, 0%, 100%);
+  /* Primary - Azul mais claro para dark mode */
+  --primary: hsl(217.2, 91.2%, 59.8%); /* Blue 500 */
+  --primary-foreground: hsl(0, 0%, 100%); /* Branco para contraste no dark mode */
   
-  /* Secondary - Tons escuros com toque de cor */
-  --secondary: hsl(240, 12%, 18%);
-  --secondary-foreground: hsl(262, 83%, 65%);
+  /* Secondary - Cinza escuro */
+  --secondary: hsl(217.2, 32.6%, 17.5%); /* Gray 800 */
+  --secondary-foreground: hsl(210, 40%, 98%);
   
   /* Muted - Tons neutros escuros */
-  --muted: hsl(240, 10%, 15%);
-  --muted-foreground: hsl(240, 5%, 65%);
+  --muted: hsl(217.2, 32.6%, 17.5%);
+  --muted-foreground: hsl(215, 20.2%, 65.1%); /* Gray 400 */
   
-  /* Accent - Ciano vibrante */
-  --accent: hsl(187, 85%, 60%);
-  --accent-foreground: hsl(240, 15%, 8%);
+  /* Accent - Verde mais claro para dark mode */
+  --accent: hsl(142.1, 76.2%, 36.3%); /* Emerald 600 */
+  --accent-foreground: hsl(210, 40%, 98%);
   
-  /* Destructive - Vermelho vibrante */
-  --destructive: hsl(0, 84.2%, 65%);
-  --destructive-foreground: hsl(0, 0%, 100%);
+  /* Destructive */
+  --destructive: hsl(0, 72.2%, 50.6%); /* Red 600 */
+  --destructive-foreground: hsl(210, 40%, 98%);
   
   /* Border e Input */
-  --border: hsl(240, 12%, 20%);
-  --input: hsl(240, 12%, 15%);
+  --border: hsl(217.2, 32.6%, 17.5%);
+  --input: hsl(217.2, 32.6%, 17.5%);
   
-  /* Ring - Cor de foco vibrante */
-  --ring: hsl(262, 83%, 65%);
+  /* Ring */
+  --ring: hsl(217.2, 91.2%, 59.8%);
   
-  /* Cores vibrantes para gráficos (Dark) */
-  --chart-1: hsl(262, 83%, 65%);
-  --chart-2: hsl(187, 85%, 60%);
-  --chart-3: hsl(142, 76%, 55%);
-  --chart-4: hsl(45, 93%, 63%);
-  --chart-5: hsl(341, 75%, 60%);
+  /* Cores para gráficos (Dark) - Menos saturadas */
+  --chart-1: hsl(217.2, 91.2%, 59.8%); /* Blue 500 */
+  --chart-2: hsl(142.1, 76.2%, 36.3%); /* Emerald 600 */
+  --chart-3: hsl(45.4, 93.4%, 47.5%); /* Amber 600 */
+  --chart-4: hsl(142.1, 70.6%, 45.3%); /* Green 600 */
+  --chart-5: hsl(346.8, 77.2%, 49.8%); /* Rose 600 */
   
-  --sidebar: hsl(240, 12%, 10%);
-  --sidebar-foreground: hsl(0, 0%, 95%);
-  --sidebar-primary: hsl(262, 83%, 65%);
-  --sidebar-primary-foreground: hsl(0, 0%, 100%);
-  --sidebar-accent: hsl(187, 85%, 60%);
-  --sidebar-accent-foreground: hsl(240, 15%, 8%);
-  --sidebar-border: hsl(240, 12%, 20%);
-  --sidebar-ring: hsl(262, 83%, 65%);
+  /* Sidebar */
+  --sidebar: hsl(222.2, 47.4%, 11.2%);
+  --sidebar-foreground: hsl(210, 40%, 98%);
+  --sidebar-primary: hsl(217.2, 91.2%, 59.8%);
+  --sidebar-primary-foreground: hsl(222.2, 47.4%, 11.2%);
+  --sidebar-accent: hsl(262.1, 83.3%, 57.8%); /* Violet 500 */
+  --sidebar-accent-foreground: hsl(210, 40%, 98%);
+  --sidebar-border: hsl(217.2, 32.6%, 17.5%);
+  --sidebar-ring: hsl(217.2, 91.2%, 59.8%);
   
+  /* Tipografia */
   --font-sans: Inter, system-ui, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
+  
+  /* Border Radius */
   --radius: 12px;
 }
 
@@ -368,26 +375,8 @@ html {
   }
 }
 
-/* Gradientes otimizados - reduzidos para melhor performance */
-/* Usar will-change e transform para melhorar renderização */
-.gradient-primary {
-  background: linear-gradient(135deg, hsl(262, 83%, 58%) 0%, hsl(187, 85%, 55%) 100%);
-  will-change: background;
-}
-
-.gradient-accent {
-  background: linear-gradient(135deg, hsl(187, 85%, 55%) 0%, hsl(142, 76%, 50%) 100%);
-  will-change: background;
-}
-
-/* Gradiente card simplificado - menos opacidade para melhor performance */
-.gradient-card {
-  background: linear-gradient(135deg, hsl(262, 83%, 58%, 0.08) 0%, hsl(187, 85%, 55%, 0.08) 100%);
-}
-
-.dark .gradient-card {
-  background: linear-gradient(135deg, hsl(262, 83%, 65%, 0.12) 0%, hsl(187, 85%, 60%, 0.12) 100%);
-}
+/* Gradientes removidos - usar cores sólidas do sistema de design */
+/* Se necessário gradiente sutil, usar apenas em casos específicos com opacidade baixa */
 
 /* Glassmorphism effect */
 .glass-effect {
@@ -402,16 +391,7 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Glow effect otimizado - reduzido para melhor performance */
-.glow-primary {
-  box-shadow: 0 0 15px hsl(262, 83%, 58%, 0.3);
-  will-change: box-shadow;
-}
-
-.glow-accent {
-  box-shadow: 0 0 15px hsl(187, 85%, 55%, 0.3);
-  will-change: box-shadow;
-}
+/* Glow effects removidos - usar sombras padrão do sistema (shadow-sm, shadow-md, shadow-lg) */
 
 /* Hover effects vibrantes */
 .hover-lift {
