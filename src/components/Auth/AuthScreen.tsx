@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain } from "lucide-react";
+import { Brain, Sparkles, TrendingUp, Zap, CheckCircle2, Users } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
@@ -33,7 +33,7 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-sm sm:max-w-md backdrop-blur-xl bg-card/90 dark:bg-card/80 shadow-2xl rounded-3xl p-6 sm:p-8 space-y-6 relative z-10 border-2 border-primary/20 hover:border-primary/30 transition-all duration-300"
+        className="w-full max-w-md sm:max-w-lg backdrop-blur-xl bg-card/90 dark:bg-card/80 shadow-2xl rounded-3xl p-6 sm:p-8 space-y-6 relative z-10 border-2 border-primary/20 hover:border-primary/30 transition-all duration-300"
       >
         {/* Efeito de brilho sutil no card */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 rounded-3xl opacity-50" />
@@ -71,9 +71,68 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-muted-foreground mt-3 font-medium">
-            Flashcards inteligentes com IA
+          <p className="text-base sm:text-lg text-foreground mt-3 font-semibold">
+            Memorize mais rápido com flashcards gerados por IA
           </p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Algoritmo de repetição espaçada otimizado para você
+          </p>
+        </div>
+
+        {/* Proposta de Valor - Hero Section */}
+        <div className="relative z-10 space-y-4 pt-2">
+          <div className="grid grid-cols-1 gap-3">
+            {[
+              {
+                icon: Sparkles,
+                text: "Geração instantânea de flashcards com IA",
+                color: "text-primary"
+              },
+              {
+                icon: TrendingUp,
+                text: "Acompanhamento inteligente do seu progresso",
+                color: "text-accent"
+              },
+              {
+                icon: Zap,
+                text: "Algoritmo de repetição espaçada otimizado",
+                color: "text-primary"
+              },
+              {
+                icon: Brain,
+                text: "Estude em qualquer dispositivo",
+                color: "text-accent"
+              }
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+              >
+                <div className={`flex-shrink-0 ${item.color}`}>
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <span className="text-sm font-medium text-foreground">
+                  {item.text}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Social Proof */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="flex items-center justify-center gap-2 pt-2 border-t border-border/50"
+          >
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">
+              Junte-se a <span className="font-semibold text-foreground">a plataforma que ajuda</span> a melhoraram suas notas
+            </span>
+          </motion.div>
         </div>
 
 

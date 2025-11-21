@@ -15,7 +15,7 @@ import {
   clearSessionId,
   getSessionId,
 } from "../lib/firebase/session";
-// import { authApi } from "../api/authApi";
+import { authApi } from "../api/authApi";
 import { useToast } from "../hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -82,18 +82,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const newSessionId = getOrCreateSessionId();
 
-      // const response = await authApi.syncUser({
-      //   email: firebaseUser.email || "",
-      //   name: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "Usuário",
-      //   sessionId: newSessionId,
-      // });
+      // CRÍTICO: Sincroniza usuário com backend ANTES de permitir outras requisições
+      await authApi.syncUser({
+        email: firebaseUser.email || "",
+        name: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "Usuário",
+        sessionId: newSessionId,
+      });
 
       setSessionId(newSessionId);
       setIsSessionValid(true);
       
       // CRÍTICO: Aguarda um momento adicional para garantir que o token está totalmente processado
       // antes de permitir que outras requisições sejam feitas
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
 
     } catch (error: any) {
@@ -183,6 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   /**
    * Gerenciamento principal de autenticação
    * CRÍTICO: Detecta mudanças de usuário e limpa/invalida queries quando necessário
+   * CRÍTICO: sync-user DEVE ser chamado ANTES de qualquer outra requisição
    */
   useEffect(() => {
     const unsubscribeAuth = onAuthChange(async (firebaseUser) => {
@@ -200,11 +202,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Atualiza referência do usuário atual
       previousUserIdRef.current = currentUserId;
       
-      setUser(firebaseUser);
-      setLoading(false);
-
       // Se não há usuário, limpa tudo
       if (!firebaseUser) {
+        setUser(null);
+        setLoading(false);
         clearSessionId();
         setSessionId(null);
         setIsSessionValid(false);
@@ -213,21 +214,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Se há usuário, sincroniza com backend
-      await syncUserWithBackend(firebaseUser);
+      // CRÍTICO: Define loading como true para bloquear queries até sincronização completa
+      setLoading(true);
       
-      // CRÍTICO: Aguarda um momento adicional após sincronização
-      // Isso garante que o token está totalmente processado antes de fazer requisições
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // CRÍTICO: Após sincronizar e aguardar, invalida todas as queries para forçar refetch
-      // Isso garante que os dados do novo usuário sejam carregados com token válido
-      queryClient.invalidateQueries();
+      // CRÍTICO: Sincroniza com backend ANTES de definir user e permitir queries
+      // Isso garante que sync-user seja chamado ANTES de qualquer outra requisição
+      try {
+        await syncUserWithBackend(firebaseUser);
+        
+        // Só define user e loading como false APÓS sincronização bem-sucedida
+        setUser(firebaseUser);
+        setLoading(false);
+        
+        // CRÍTICO: Após sincronizar, invalida todas as queries para forçar refetch
+        // Isso garante que os dados do novo usuário sejam carregados com token válido
+        await new Promise(resolve => setTimeout(resolve, 300));
+        queryClient.invalidateQueries();
+      } catch (error) {
+        // Se sincronização falhou, mantém loading e não define user
+        console.error("❌ Erro na sincronização inicial:", error);
+        setLoading(false);
+        // Não define user se sincronização falhou
+      }
     });
 
     // Cleanup
     return () => {
- 
       unsubscribeAuth();
     };
   }, [syncUserWithBackend, queryClient]);

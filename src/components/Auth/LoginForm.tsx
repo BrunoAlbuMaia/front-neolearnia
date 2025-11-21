@@ -5,7 +5,6 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Loader2 } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
-import { useSyncUser } from "../../hooks/useAuth";
 import { loginWithGoogle } from "../../lib/firebase/auth";
 import { FcGoogle } from "react-icons/fc";
 import { getOrCreateSessionId } from "../../lib/firebase/session";
@@ -16,7 +15,6 @@ interface LoginFormProps {
 
 export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
   const { toast } = useToast();
-  const syncUser = useSyncUser();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,6 +27,7 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
 
     try {
       // 1. Autentica com email/senha (Firebase)
+      // O AuthContext vai detectar automaticamente a mudança e sincronizar
       const userCredential = await loginWithEmail(email, password);
       const user = userCredential.user;
 
@@ -39,16 +38,12 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
       // 2. Garante que o sessionId existe (será enviado automaticamente via header)
       getOrCreateSessionId();
 
-      // 3. Sincroniza com backend - CRÍTICO: aguarda conclusão antes de prosseguir
-      await syncUser.mutateAsync({
-        email: user.email,
-        name: user.displayName || email.split("@")[0] || "Usuário",
-      });
+      // 3. O AuthContext.onAuthChange vai detectar a mudança e sincronizar automaticamente
+      // Aguardamos um tempo suficiente para o AuthContext processar tudo
+      // O AuthContext precisa: obter token, sincronizar com backend, atualizar estado
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // 4. Aguarda um momento para garantir que o AuthContext processou a mudança
-      // Isso evita race conditions entre o sync manual e o listener do AuthContext
-      await new Promise(resolve => setTimeout(resolve, 300));
-
+      // 4. Toast de sucesso só após tudo estar sincronizado
       toast({
         title: "Login realizado com sucesso!",
         description: `Bem-vindo${user.displayName ? `, ${user.displayName}` : ""} de volta ao MyMemorize`,
@@ -112,7 +107,7 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
 
       <Button 
         type="submit" 
-        className="w-full gradient-primary text-white hover:opacity-90 shadow-lg hover:shadow-xl glow-primary hover-lift transition-all duration-300 font-semibold h-11" 
+        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300 font-semibold h-11" 
         disabled={isLoading}
       >
         {isLoading ? (
@@ -121,7 +116,7 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
             Entrando...
           </>
         ) : (
-          "Entrar"
+          "Entrar na Minha Conta"
         )}
       </Button>
 
@@ -170,16 +165,11 @@ export default function LoginForm({ onAuthSuccess }: LoginFormProps) {
             // 3. Garante que o sessionId existe (será enviado automaticamente via header)
             getOrCreateSessionId();
 
-            // 4. Sincroniza com backend - CRÍTICO: aguarda conclusão antes de prosseguir
-            await syncUser.mutateAsync({
-              email: user.email,
-              name: user.displayName || user.email.split("@")[0] || "Usuário",
-            });
+            // 4. O AuthContext.onAuthChange vai detectar a mudança e sincronizar automaticamente
+            // Aguardamos um tempo suficiente para o AuthContext processar tudo
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // 5. Aguarda um momento para garantir que o AuthContext processou a mudança
-            // Isso evita race conditions entre o sync manual e o listener do AuthContext
-            await new Promise(resolve => setTimeout(resolve, 300));
-
+            // 5. Toast de sucesso só após tudo estar sincronizado
             toast({
               title: "Login realizado com sucesso!",
               description: `Bem-vindo${user.displayName ? `, ${user.displayName}` : ""} ao MyMemorize`,

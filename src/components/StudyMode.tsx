@@ -18,6 +18,8 @@ import {
   Minus,
   Check
 } from "lucide-react";
+import { TooltipProvider } from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@radix-ui/react-tooltip";
 
 interface StudyModeProps {
   flashcards: Flashcard[];

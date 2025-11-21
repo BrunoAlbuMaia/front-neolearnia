@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { flashcardsApi } from '../api';
 import type { FlashcardSet, GenerateFlashcardsPayload } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 const QUERY_KEYS = {
   flashcardSets: () => [flashcardsApi.getFlashcardSets.name] as const,
@@ -8,9 +9,18 @@ const QUERY_KEYS = {
 };
 
 export function useFlashcardSets() {
+  const { user } = useAuth();
+  
   return useQuery<FlashcardSet[]>({
     queryKey: QUERY_KEYS.flashcardSets(),
     queryFn: () => flashcardsApi.getFlashcardSets(),
+    // CRÍTICO: Só executa quando há usuário autenticado
+    enabled: !!user,
+    // Retry apenas se for erro de rede, não 401
+    retry: (failureCount, error: any) => {
+      if (error?.status === 401) return false;
+      return failureCount < 3;
+    },
   });
 }
 

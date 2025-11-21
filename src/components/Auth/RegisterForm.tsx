@@ -6,7 +6,6 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Loader2, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
-import { useSyncUser } from "../../hooks/useAuth";
 
 interface RegisterFormProps {
   onAuthSuccess: () => void;
@@ -14,7 +13,6 @@ interface RegisterFormProps {
 
 export default function RegisterForm({ onAuthSuccess }: RegisterFormProps) {
   const { toast } = useToast();
-  const syncUser = useSyncUser();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -96,15 +94,21 @@ export default function RegisterForm({ onAuthSuccess }: RegisterFormProps) {
 
     setIsLoading(true);
     try {
+      // 1. Registra no Firebase
+      // O AuthContext vai detectar automaticamente a mudança e sincronizar
       await registerWithEmail(formData.email, formData.password);
-      await syncUser.mutateAsync({
-        email: formData.email,
-        name: `${formData.name} ${formData.lastname}`,
-      });
+      
+      // 2. Aguarda o AuthContext processar a autenticação completamente
+      // O AuthContext precisa: obter token, sincronizar com backend, atualizar estado
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // 3. Toast de sucesso só após tudo estar sincronizado
       toast({
         title: "Conta criada com sucesso!",
         description: "Bem-vindo ao MyMemorize 🎉",
       });
+      
+      // 4. Só então chama onAuthSuccess após garantir que tudo foi sincronizado
       onAuthSuccess();
     } catch (error: any) {
       const msg =
@@ -252,14 +256,14 @@ export default function RegisterForm({ onAuthSuccess }: RegisterFormProps) {
               <Button variant="outline" type="button" onClick={prevStep}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
               </Button>
-              <Button type="submit" className="flex items-center" disabled={isLoading}>
+              <Button type="submit" className="flex items-center bg-primary text-primary-foreground hover:bg-primary/90" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando conta...
                   </>
                 ) : (
                   <>
-                    Finalizar <Check className="ml-2 h-4 w-4" />
+                    Criar Minha Conta <Check className="ml-2 h-4 w-4" />
                   </>
                 )}
               </Button>

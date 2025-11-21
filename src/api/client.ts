@@ -46,6 +46,13 @@ export async function apiRequest<T>(
     'Content-Type': 'application/json',
   };
 
+  // ✅ CRÍTICO: Adiciona sessionId em TODAS as requisições (incluindo sync-user)
+  // O sessionId DEVE estar presente mesmo em requisições não autenticadas como sync-user
+  const sessionId = getSessionId();
+  if (sessionId) {
+    headers['X-Session-ID'] = sessionId;
+  }
+
   // ✅ Adiciona token de autenticação
   if (requiresAuth) {
     // Força refresh do token para garantir que está atualizado
@@ -59,14 +66,6 @@ export async function apiRequest<T>(
       if (retryToken) {
         headers['Authorization'] = `Bearer ${retryToken}`;
       }
-    }
-  }
-
-  // ✅ CRÍTICO: Adiciona sessionId em TODAS as requisições autenticadas
-  if (requiresAuth) {
-    const sessionId = await getSessionId();
-    if (sessionId) {
-      headers['X-Session-ID'] = sessionId;
     }
   }
   // console.log(getSessionId())
