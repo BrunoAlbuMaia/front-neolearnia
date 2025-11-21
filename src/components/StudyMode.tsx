@@ -402,7 +402,7 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                     rotate,
                     opacity,
                   }}
-                  initial={{ scale: 0.9, opacity: 0, rotate: -10, x: 0, y: 0 }}
+                  initial={{ scale: 0.95, opacity: 0, rotate: -5, x: 0, y: 0 }}
                   animate={{ 
                     scale: 1, 
                     opacity: 1, 
@@ -411,18 +411,17 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                     y: 0   // CRÍTICO: Sempre força para o centro
                   }}
                   exit={{
-                    x: exitDirection === 'left' ? -500 : exitDirection === 'right' ? 500 : 0,
-                    y: exitDirection === 'up' ? -500 : 0,
+                    x: exitDirection === 'left' ? -400 : exitDirection === 'right' ? 400 : 0,
+                    y: exitDirection === 'up' ? -400 : 0,
                     opacity: 0,
-                    scale: 0.8,
-                    rotate: exitDirection === 'left' ? -30 : exitDirection === 'right' ? 30 : 0,
+                    scale: 0.85,
+                    rotate: exitDirection === 'left' ? -20 : exitDirection === 'right' ? 20 : 0,
                   }}
                   transition={{ 
                     type: "spring", 
-                    stiffness: 150, // Reduzido para movimento mais suave e natural
-                    damping: 20, // Reduzido para movimento mais suave
-                    mass: 1.2, // Adicionado massa para movimento mais pesado/natural
-                    duration: 0.8 // Aumentado para transição mais lenta e natural
+                    stiffness: 100,  // Mais suave - menor rigidez
+                    damping: 25,     // Mais amortecido para movimento mais suave
+                    mass: 0.8,       // Mais leve para movimento mais natural
                   }}
                   // CRÍTICO: Força reset quando a key muda (novo card)
                   key={currentCardIndex}
@@ -476,7 +475,7 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                                   scale: swipeDirection === 'left' ? 1.15 : 0.9,
                                   x: swipeDirection === 'left' ? 5 : 0
                                 }}
-                                transition={{ type: "spring", stiffness: 300 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 20 }}
                               >
                                 <div className="px-2 sm:px-3 py-1 sm:py-2 bg-red-600/90 backdrop-blur-sm text-white rounded-lg font-semibold text-xs shadow-lg flex items-center gap-1 border border-white/20">
                                   <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -499,7 +498,7 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                                   scale: swipeDirection === 'right' ? 1.15 : 0.9,
                                   x: swipeDirection === 'right' ? -5 : 0
                                 }}
-                                transition={{ type: "spring", stiffness: 300 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 20 }}
                               >
                                 <div className="px-2 sm:px-3 py-1 sm:py-2 bg-green-600/90 backdrop-blur-sm text-white rounded-lg font-semibold text-xs shadow-lg flex items-center gap-1 border border-white/20">
                                   <span className="hidden sm:inline">Fácil</span>

@@ -559,23 +559,18 @@ export default function ReviewMode() {
           {/* CRÍTICO: Card com gestos de swipe estilo Tinder */}
           <div className="relative w-full aspect-video mb-6 perspective-1000">
             <AnimatePresence mode="wait">
-              {!isExiting && (
+              {!isExiting && currentCard && (
                 <motion.div
-                  key={currentCardIndex}
+                  key={`card-${currentCardIndex}`}
                   drag={isFlipped && !hasVoted ? true : false} // CRÍTICO: Permite arrastar em todas as direções após virar o card E se ainda não votou
                   dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                   dragElastic={0.2}
                   onDragStart={handleDragStart}
-                      onDragEnd={handleDragEnd}
-                      onDrag={(_event, info) => {
-                        // Atualiza valores de movimento para feedback visual
-                        x.set(info.offset.x);
-                        y.set(info.offset.y);
-                        
-                        // Resetar isExiting quando começa a arrastar um novo card
-                        if (isExiting) {
-                          setIsExiting(false);
-                        }
+                  onDragEnd={handleDragEnd}
+                  onDrag={(_event, info) => {
+                    // Atualiza valores de movimento para feedback visual
+                    x.set(info.offset.x);
+                    y.set(info.offset.y);
                     
                     // Detecta direção do swipe em tempo real
                     if (Math.abs(info.offset.y) > Math.abs(info.offset.x)) {
@@ -602,7 +597,7 @@ export default function ReviewMode() {
                     rotate,
                     opacity,
                   }}
-                      initial={{ scale: 0.9, opacity: 0, rotate: -10, x: 0, y: 0 }}
+                      initial={{ scale: 0.95, opacity: 0, rotate: -5, x: 0, y: 0 }}
                   animate={{ 
                     scale: 1, 
                     opacity: 1, 
@@ -611,21 +606,18 @@ export default function ReviewMode() {
                     y: 0   // CRÍTICO: Sempre força para o centro
                   }}
                   exit={{
-                    x: exitDirection === 'left' ? -500 : exitDirection === 'right' ? 500 : 0,
-                    y: exitDirection === 'up' ? -500 : 0,
+                    x: exitDirection === 'left' ? -400 : exitDirection === 'right' ? 400 : 0,
+                    y: exitDirection === 'up' ? -400 : 0,
                     opacity: 0,
-                    scale: 0.8,
-                    rotate: exitDirection === 'left' ? -30 : exitDirection === 'right' ? 30 : 0,
+                    scale: 0.85,
+                    rotate: exitDirection === 'left' ? -20 : exitDirection === 'right' ? 20 : 0,
                   }}
                   transition={{ 
                     type: "spring", 
-                    stiffness: 150,
-                    damping: 20,
-                    mass: 1.2,
-                    duration: 0.8
+                    stiffness: 100,  // Mais suave - menor rigidez
+                    damping: 25,     // Mais amortecido para movimento mais suave
+                    mass: 0.8,       // Mais leve para movimento mais natural
                   }}
-                  // CRÍTICO: Força reset quando a key muda (novo card)
-                  key={currentCardIndex}
                   className={`w-full h-full ${isFlipped ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
                 >
                   <div 
@@ -674,7 +666,7 @@ export default function ReviewMode() {
                               scale: swipeDirection === 'left' ? 1.15 : 0.9,
                               x: swipeDirection === 'left' ? 5 : 0
                             }}
-                            transition={{ type: "spring", stiffness: 300 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 20 }}
                           >
                             <div className="px-2 sm:px-3 py-1 sm:py-2 bg-red-600/90 backdrop-blur-sm text-white rounded-lg font-semibold text-xs shadow-lg flex items-center gap-1 border border-white/20">
                               <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -697,7 +689,7 @@ export default function ReviewMode() {
                               scale: swipeDirection === 'right' ? 1.15 : 0.9,
                               x: swipeDirection === 'right' ? -5 : 0
                             }}
-                            transition={{ type: "spring", stiffness: 300 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 20 }}
                           >
                             <div className="px-2 sm:px-3 py-1 sm:py-2 bg-green-600/90 backdrop-blur-sm text-white rounded-lg font-semibold text-xs shadow-lg flex items-center gap-1 border border-white/20">
                               <span className="hidden sm:inline">Fácil</span>
