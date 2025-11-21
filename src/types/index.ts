@@ -136,10 +136,7 @@ export interface GenerateFlashcardsResponse {
   flashcardSet: FlashcardSet;
 }
 
-export interface SyncUserPayload {
-  email: string;
-  name?: string;
-}
+// Interface duplicada removida - usando a definição completa acima
 
 export interface CreateStudySessionPayload {
   flashcardSetId: string;

@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { registerWithEmail } from "../../lib/firebase/auth";
+import { registerWithEmail, loginWithGoogle } from "../../lib/firebase/auth";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Loader2, ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
+import { FcGoogle } from "react-icons/fc";
+import { Separator } from "../ui/separator";
 
 interface RegisterFormProps {
   onAuthSuccess: () => void;
@@ -13,90 +14,40 @@ interface RegisterFormProps {
 
 export default function RegisterForm({ onAuthSuccess }: RegisterFormProps) {
   const { toast } = useToast();
-  const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-
-  const [formData, setFormData] = useState({
-    name: "",
-    lastname: "",
-    birthdate: "",
-    cep: "",
-    rua: "",
-    bairro: "",
-    cidade: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-
-    if (name === "cep" && value.replace(/\D/g, "").length === 8) {
-      buscarCep(value);
-    }
-  };
-  const nextStep = () => {
-    if (step === 1 && (!formData.name || !formData.lastname || !formData.birthdate)) {
-      toast({ title: "Preencha todos os campos antes de continuar.", variant: "destructive" });
-      return;
-    }
-    if (step === 2 && (!formData.cep || !formData.rua || !formData.bairro || !formData.cidade)) {
-      toast({ title: "Complete seu endereço antes de prosseguir.", variant: "destructive" });
-      return;
-    }
-    setStep(step + 1);
-  };
-
-  const prevStep = () => setStep(step - 1);
-
-  const [loadingCep, setLoadingCep] = useState(false);
-  const [errorCep, setErrorCep] = useState("");
-
-  
-
-  const buscarCep = async (cep: string) => {
-    try {
-      setLoadingCep(true);
-      setErrorCep("");
-      const onlyNumbers = cep.replace(/\D/g, "");
-      const response = await fetch(`https://viacep.com.br/ws/${onlyNumbers}/json/`);
-      const data = await response.json();
-
-      if (data.erro) {
-        setErrorCep("CEP não encontrado.");
-        return;
-      }
-
-      setFormData((prev) => ({
-        ...prev,
-        rua: data.logradouro || "",
-        bairro: data.bairro || "",
-        cidade: data.localidade || "",
-        estado: data.uf || "",
-      }));
-    } catch {
-      setErrorCep("Erro ao buscar o CEP. Tente novamente.");
-    } finally {
-      setLoadingCep(false);
-    }
-  };
-
+  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      toast({ title: "As senhas não coincidem.", variant: "destructive" });
+    if (!email || !password || !confirmPassword) {
+      toast({
+        title: "Preencha todos os campos",
+        variant: "destructive",
+      });
       return;
     }
+
+    if (password.length < 6) {
+      toast({
+        title: "Senha muito fraca",
+        description: "A senha deve ter no mínimo 6 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Nota: A validação de senhas iguais é feita no backend
+    // Aqui apenas verificamos se os campos foram preenchidos
 
     setIsLoading(true);
     try {
       // 1. Registra no Firebase
       // O AuthContext vai detectar automaticamente a mudança e sincronizar
-      await registerWithEmail(formData.email, formData.password);
+      await registerWithEmail(email, password);
       
       // 2. Aguarda o AuthContext processar a autenticação completamente
       // O AuthContext precisa: obter token, sincronizar com backend, atualizar estado
@@ -116,6 +67,8 @@ export default function RegisterForm({ onAuthSuccess }: RegisterFormProps) {
           ? "Email já cadastrado."
           : error.code === "auth/weak-password"
           ? "Senha muito fraca (mínimo 6 caracteres)."
+          : error.code === "auth/invalid-email"
+          ? "Email inválido."
           : "Erro ao criar conta.";
       toast({
         title: "Erro no cadastro",
@@ -127,150 +80,143 @@ export default function RegisterForm({ onAuthSuccess }: RegisterFormProps) {
     }
   };
 
+  const handleGoogleRegister = async () => {
+    setIsLoadingGoogle(true);
+    try {
+      // Login com Google (funciona tanto para login quanto cadastro)
+      await loginWithGoogle();
+      
+      // Aguarda o AuthContext processar a autenticação completamente
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast({
+        title: "Conta criada com sucesso!",
+        description: "Bem-vindo ao MyMemorize 🎉",
+      });
+      
+      onAuthSuccess();
+    } catch (error: any) {
+      const msg =
+        error.code === "auth/popup-closed-by-user"
+          ? "Cadastro cancelado."
+          : error.code === "auth/popup-blocked"
+          ? "Pop-up bloqueado. Permita pop-ups para este site."
+          : "Erro ao cadastrar com Google.";
+      toast({
+        title: "Erro no cadastro",
+        description: msg,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingGoogle(false);
+    }
+  };
+
   return (
-    <form onSubmit={handleRegister} className="space-y-6">
-      {/* Progress indicator */}
-      <div className="flex items-center justify-center gap-3 mb-4">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className={`h-2 w-10 rounded-full transition-all ${
-              step >= i ? "bg-indigo-500" : "bg-gray-200 dark:bg-gray-700"
-            }`}
-          />
-        ))}
+    <form onSubmit={handleRegister} className="space-y-5 relative z-10">
+      {/* Botão de cadastro com Google */}
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full h-11 border-2 border-primary/20 hover:border-primary/40 bg-background transition-all duration-300 font-semibold"
+        onClick={handleGoogleRegister}
+        disabled={isLoadingGoogle || isLoading}
+      >
+        {isLoadingGoogle ? (
+          <>
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            Cadastrando...
+          </>
+        ) : (
+          <>
+            <FcGoogle className="mr-2 h-5 w-5" />
+            Cadastrar com Google
+          </>
+        )}
+      </Button>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <Separator className="w-full" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            Ou cadastre-se com email
+          </span>
+        </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {step === 1 && (
-          <motion.div
-            key="step1"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-4"
-          >
-            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
-              Dados pessoais
-            </h2>
+      {/* Formulário de cadastro com email e senha */}
+      <div className="space-y-2">
+        <Label htmlFor="register-email" className="text-sm font-semibold text-foreground">
+          Email
+        </Label>
+        <Input
+          id="register-email"
+          type="email"
+          placeholder="seu@email.com"
+          className="h-11 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background transition-all"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          disabled={isLoading || isLoadingGoogle}
+        />
+      </div>
 
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <Label>Nome <span className="text-red-500">*</span></Label>
-                <Input name="name" className="bg-grey-50 text-black" value={formData.name} onChange={handleChange} placeholder="Digite seu nome" required/>
-              </div>
-              <div>
-                <Label>Sobrenome <span className="text-red-500">*</span></Label>
-                <Input name="lastname" className="bg-grey-50 text-black" value={formData.lastname} onChange={handleChange} placeholder="Digite seu sobrenome" required/>
-              </div>
-            </div>
+      <div className="space-y-2">
+        <Label htmlFor="register-password" className="text-sm font-semibold text-foreground">
+          Senha
+        </Label>
+        <Input
+          id="register-password"
+          type="password"
+          className="h-11 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background transition-all"
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          disabled={isLoading || isLoadingGoogle}
+          minLength={6}
+        />
+        <p className="text-xs text-muted-foreground">
+          Mínimo de 6 caracteres
+        </p>
+      </div>
 
-            <div>
-              <Label>Data de nascimento <span className="text-red-500">*</span></Label>
-              <Input name="birthdate" className="bg-grey-50 text-black" type="date" value={formData.birthdate} onChange={handleChange} required />
-            </div>
+      <div className="space-y-2">
+        <Label htmlFor="register-confirm-password" className="text-sm font-semibold text-foreground">
+          Confirmar Senha
+        </Label>
+        <Input
+          id="register-confirm-password"
+          type="password"
+          className="h-11 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background transition-all"
+          placeholder="••••••••"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+          disabled={isLoading || isLoadingGoogle}
+          minLength={6}
+        />
+        <p className="text-xs text-muted-foreground">
+          Digite a senha novamente para confirmar
+        </p>
+      </div>
 
-            <Button type="button" className="w-full" onClick={nextStep}>
-              Próximo <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </motion.div>
+      <Button
+        type="submit"
+        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300 font-semibold h-11"
+        disabled={isLoading || isLoadingGoogle}
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Cadastrando...
+          </>
+        ) : (
+          "Criar Conta"
         )}
-
-        {step === 2 && (
-          <motion.div
-            key="step2"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-4"
-          >
-            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
-              Endereço
-            </h2>
-
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <Label>CEP <span className="text-red-500">*</span></Label>
-                <Input name="cep"  className="cursor-not-allowed bg-grey-50 text-black" value={formData.cep} onChange={handleChange} />
-              </div>
-              <div>
-                <Label>Cidade</Label>
-                <Input name="cidade" value={formData.cidade} onChange={handleChange} readOnly />
-              </div>
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <Label>Bairro</Label>
-                <Input name="bairro" value={formData.bairro} onChange={handleChange} readOnly />
-              </div>
-              <div>
-                <Label>Rua</Label>
-                <Input name="rua"  value={formData.rua} onChange={handleChange}readOnly />
-              </div>
-            </div>
-
-            <div className="flex justify-between">
-              <Button variant="outline" type="button" onClick={prevStep}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
-              </Button>
-              <Button type="button" onClick={nextStep}>
-                Próximo <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </motion.div>
-        )}
-
-        {step === 3 && (
-          <motion.div
-            key="step3"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-4"
-          >
-            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
-              Acesso à plataforma
-            </h2>
-
-            <div>
-              <Label>Email</Label>
-              <Input name="email" type="email" value={formData.email} onChange={handleChange} />
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <Label>Senha</Label>
-                <Input name="password" type="password" value={formData.password} onChange={handleChange} />
-              </div>
-              <div>
-                <Label>Confirmar senha</Label>
-                <Input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} />
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <Button variant="outline" type="button" onClick={prevStep}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
-              </Button>
-              <Button type="submit" className="flex items-center bg-primary text-primary-foreground hover:bg-primary/90" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando conta...
-                  </>
-                ) : (
-                  <>
-                    Criar Minha Conta <Check className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </Button>
     </form>
   );
 }

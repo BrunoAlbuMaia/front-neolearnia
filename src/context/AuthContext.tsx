@@ -56,22 +56,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isSyncing.current = true;
 
     try {
+      // CRÍTICO: Aguarda alguns segundos após criar o usuário no Firebase
+      // Isso garante que o Firebase processou completamente o usuário antes de sincronizar
+      console.log("⏳ Aguardando Firebase processar usuário...");
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 segundos inicial
+
       // CRÍTICO: Aguarda o token estar totalmente processado após login
       // O Firebase pode precisar de um momento para processar o token na primeira vez
       let token: string | null = null;
       let attempts = 0;
-      const maxAttempts = 5;
+      const maxAttempts = 8; // Aumentado para dar mais tempo
       
       while (!token && attempts < maxAttempts) {
         try {
           token = await firebaseUser.getIdToken(true); // Force refresh
-          if (token) break;
+          if (token) {
+            console.log("✅ Token obtido com sucesso!");
+            break;
+          }
         } catch (tokenError) {
           console.log(`⏳ Tentativa ${attempts + 1}/${maxAttempts} de obter token...`);
         }
         
         if (!token && attempts < maxAttempts - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Aguarda mais tempo entre tentativas para dar tempo do Firebase processar
+          await new Promise(resolve => setTimeout(resolve, 800));
         }
         attempts++;
       }
@@ -79,13 +88,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!token) {
         throw new Error("Não foi possível obter o token de autenticação após múltiplas tentativas.");
       }
+
+      // CRÍTICO: Aguarda mais tempo para garantir que o Firebase atualizou todas as informações do usuário
+      console.log("⏳ Aguardando Firebase finalizar processamento...");
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Mais 1.5 segundos
+
+      // Recarrega o usuário do Firebase para obter informações atualizadas (displayName, etc)
+      await firebaseUser.reload();
+      
+      // Obtém o name do Firebase - prioriza displayName, depois email sem @, depois "Usuário"
+      let userName = firebaseUser.displayName;
+      
+      // Se não tem displayName, tenta obter do email
+      if (!userName || userName.trim() === "") {
+        userName = firebaseUser.email?.split("@")[0] || "Usuário";
+      }
+      
+      // Garante que sempre tenha um nome válido (não vazio)
+      if (!userName || userName.trim() === "") {
+        userName = "Usuário";
+      }
+      
+      console.log("📝 Nome do usuário obtido:", userName);
       
       const newSessionId = getOrCreateSessionId();
 
       // CRÍTICO: Sincroniza usuário com backend ANTES de permitir outras requisições
+      // Garante que name sempre seja enviado (não pode ser vazio)
       await authApi.syncUser({
         email: firebaseUser.email || "",
-        name: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "Usuário",
+        name: userName,
         sessionId: newSessionId,
       });
 
