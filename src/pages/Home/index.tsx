@@ -13,9 +13,8 @@ import { type Quiz } from "../../types";
 const AnalyticsPage = lazy(() => import("../../components/AnalyticsPage").then(m => ({ default: m.AnalyticsPage })));
 const StudyPage = lazy(() => import("./StudyPage").then(m => ({ default: m.StudyPage })));
 const QuizPage = lazy(() => import("./QuizPage").then(m => ({ default: m.QuizPage })));
-const OnboardingScreen = lazy(() => import("../../components/Auth/Onboarding/OnboardingScreen"));
 
-type Screen = 'auth' | 'dashboard' | 'study' | 'quiz' | 'analytics' | 'reviewMode' | 'onboarding';
+type Screen = 'auth' | 'dashboard' | 'study' | 'quiz' | 'analytics' | 'reviewMode';
 
 export default function Home() {
   const { user: authUser, loading: authLoading, logoutUser } = useAuth();
@@ -74,17 +73,8 @@ export default function Home() {
       return;
     }
 
-    // Processa o userState para determinar a tela
-    if (parsedUserState) {
-      if (!parsedUserState.has_onboarded) {
-        setCurrentScreen('onboarding');
-      } else {
-        setCurrentScreen('dashboard');
-      }
-    } else {
-      // Se não há userState ainda, mostra dashboard (assumindo que será carregado)
-      setCurrentScreen('dashboard');
-    }
+    // Sempre mostra dashboard, onboarding agora está nas configurações
+    setCurrentScreen('dashboard');
   }, [authUser, authLoading, parsedUserState, userLoading]);
 
   // Memoizar callbacks para evitar re-renders desnecessários
@@ -150,12 +140,6 @@ export default function Home() {
               </Suspense>
             </div>
           </div>
-        );
-      case 'onboarding':
-        return (
-          <Suspense fallback={<Spinner size="lg" text="Carregando onboarding..." />}>
-            <OnboardingScreen />
-          </Suspense>
         );
       default:
         return (

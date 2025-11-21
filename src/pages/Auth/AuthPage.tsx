@@ -6,7 +6,7 @@ import AuthScreen from "../../components/Auth/AuthScreen";
 import { Spinner } from "../../components/ui/spinner";
 import { lazy, Suspense } from "react";
 
-const OnboardingScreen = lazy(() => import("../../components/Auth/Onboarding/OnboardingScreen"));
+//const OnboardingScreen = lazy(() => import("../../components/Auth/Onboarding/OnboardingScreen"));
 
 export default function AuthPage() {
   const { user, loading: authLoading } = useAuth();
@@ -16,27 +16,15 @@ export default function AuthPage() {
   // Se usuário está logado, verificar se precisa de onboarding
   useEffect(() => {
     if (user && !authLoading && !userLoading) {
-      const parsedUserState = Array.isArray(userState)
-        ? {
-            id: userState[0],
-            user_id: userState[1],
-            focus_area: userState[2],
-            learning_style: userState[3],
-            ai_level: userState[4],
-            motivation: userState[5],
-            preferred_schedule: userState[6],
-            created_at: userState[7],
-            has_onboarded: true
-          }
-        : userState;
 
-      if (parsedUserState && !parsedUserState.has_onboarded) {
-        setLocation("/onboarding");
-      } else {
-        setLocation("/dashboard");
-      }
+      //if (parsedUserState && !parsedUserState.has_onboarded) {
+       // setLocation("/onboarding");
+      //} else {
+       // setLocation("/dashboard");
+      //}
+      setLocation("/dashboard");
     }
-  }, [user, authLoading, userLoading, userState, setLocation]);
+  }, [user, authLoading, userLoading, userState]);
 
   // Se usuário está logado, mostrar loading enquanto redireciona
   if (user && !authLoading) {

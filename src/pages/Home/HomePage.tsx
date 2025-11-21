@@ -20,7 +20,7 @@ export function HomePage() {
     }
   }, [user, loading, setLocation]);
 
-  // Verificar se precisa de onboarding
+  /* Verificar se precisa de onboarding
   useEffect(() => {
     if (user && !loading && !userLoading && userState) {
       const parsedUserState = Array.isArray(userState)
@@ -41,7 +41,7 @@ export function HomePage() {
         setLocation("/onboarding");
       }
     }
-  }, [user, loading, userLoading, userState, setLocation]);
+  }, [user, loading, userLoading, userState, setLocation]);*/
 
   const handleStartStudy = (flashcards: Flashcard[]) => {
     // Buscar o deckId do primeiro flashcard

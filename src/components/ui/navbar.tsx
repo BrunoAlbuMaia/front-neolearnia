@@ -2,7 +2,7 @@
 import { Button } from "./button";
 import { ThemeToggle } from "../ThemeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "./sheet"; 
-import { BarChart3, LogOut, Menu, Home, CircleArrowOutDownLeftIcon, Crown } from "lucide-react";
+import { BarChart3, LogOut, Menu, Home, CircleArrowOutDownLeftIcon, Crown, Settings } from "lucide-react";
 import React, { useMemo } from "react";
 import { useLocation } from "wouter";
 import logo_mymemorize from "../../assets/logo_mymemorize.png";
@@ -14,6 +14,7 @@ interface SidebarProps {
   onNavigateToDashboard: () => void;
   onNavigateToHome: () => void;
   onNavigateToPlans: () => void;
+  onNavigateToSettings?: () => void;
   onNavigateToAnalytics?: () => void;
 }
 
@@ -58,6 +59,7 @@ export default function Sidebar({
   onNavigateToDashboard, 
   onNavigateToHome,
   onNavigateToPlans,
+  onNavigateToSettings,
   onNavigateToAnalytics
 }: SidebarProps) {
   const [location] = useLocation();
@@ -103,7 +105,14 @@ export default function Sidebar({
       route: '/analytics',
       dataTestId: 'sidebar-link-analytics'
     }] : []),
-  ] as NavItem[], [onNavigateToDashboard, onNavigateToReviewMode, onNavigateToAnalytics]);
+    ...(onNavigateToSettings ? [{
+      name: "Configurações",
+      icon: Settings,
+      action: onNavigateToSettings,
+      route: '/settings',
+      dataTestId: 'sidebar-link-settings'
+    }] : []),
+  ] as NavItem[], [onNavigateToDashboard, onNavigateToReviewMode, onNavigateToAnalytics, onNavigateToSettings]);
 
   const sidebarContent = (
     <div className="flex flex-col h-full p-4 bg-gradient-to-br from-card via-card to-primary/5">
@@ -149,6 +158,18 @@ export default function Sidebar({
         </div>
 
         <ThemeToggle />
+
+        {onNavigateToSettings && (
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-base py-2.5 px-4 rounded-lg transition-all duration-300 font-medium text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-l-2 hover:border-primary"
+            onClick={onNavigateToSettings}
+            data-testid="sidebar-link-settings"
+          >
+            <Settings className="h-5 w-5 mr-3" />
+            Configurações
+          </Button>
+        )}
 
         <Button
           variant="ghost"

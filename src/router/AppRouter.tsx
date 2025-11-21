@@ -13,6 +13,7 @@ const HomePage = lazy(() => import("../pages/Home/HomePage").then(m => ({ defaul
 const AnalyticsPage = lazy(() => import("../pages/Analytics/AnalyticsPage"));
 const PlansPage = lazy(() => import("../pages/Plans/PlansPage"));
 const OnboardingPage = lazy(() => import("../pages/Onboarding/OnboardingPage"));
+const SettingsPage = lazy(() => import("../pages/Settings/SettingsPage").then(m => ({ default: m.SettingsPage })));
 const NotFoundPage = lazy(() => import("../pages/not-found"));
 
 // Componente de loading para páginas
@@ -147,6 +148,12 @@ export function AppRouter() {
         <Route path="/onboarding">
           <Suspense fallback={<PageLoader />}>
             <OnboardingPage />
+          </Suspense>
+        </Route>
+
+        <Route path="/settings">
+          <Suspense fallback={<PageLoader />}>
+            <SettingsPage />
           </Suspense>
         </Route>
 
