@@ -61,13 +61,27 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
   const rotate = useTransform(x, [-300, 300], [-30, 30]);
   const opacity = useTransform(x, [-300, 0, 300], [0, 1, 0]);
   
-  // CRÍTICO: Atualizar direção do swipe em tempo real
+  // CRÍTICO: Atualizar direção do swipe em tempo real (apenas horizontal)
+  // O vertical é tratado no onDrag
   useMotionValueEvent(x, "change", (latest) => {
-    if (latest < -50) {
-      setSwipeDirection('left');
-    } else if (latest > 50) {
-      setSwipeDirection('right');
-    } else {
+    // Só atualiza se não houver movimento vertical significativo
+    const yValue = y.get();
+    if (Math.abs(yValue) < 30) {
+      if (latest < -50) {
+        setSwipeDirection('left');
+      } else if (latest > 50) {
+        setSwipeDirection('right');
+      } else {
+        setSwipeDirection(null);
+      }
+    }
+  });
+  
+  // CRÍTICO: Monitorar movimento vertical também
+  useMotionValueEvent(y, "change", (latest) => {
+    // Limpa direção horizontal quando há movimento vertical significativo
+    const xValue = x.get();
+    if (Math.abs(latest) > 30 && Math.abs(xValue) < 30) {
       setSwipeDirection(null);
     }
   });
@@ -164,35 +178,48 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
   
   // CRÍTICO: Handler para gestos de swipe estilo Tinder
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const swipeThreshold = 100;
-    const velocityThreshold = 500;
+    // Thresholds mais baixos para mobile - facilitar swipe para cima
+    const swipeThreshold = 80; // Reduzido de 100 para 80
+    const velocityThreshold = 400; // Reduzido de 500 para 400
+    const verticalSwipeThreshold = 60; // Threshold menor para swipe vertical (mais fácil no mobile)
     
     // Esconder dica após primeiro swipe
     if (showSwipeHint) {
       setShowSwipeHint(false);
     }
     
-    // Verifica velocidade e distância do swipe
-    if (Math.abs(info.offset.x) > swipeThreshold || Math.abs(info.velocity.x) > velocityThreshold) {
-      if (info.offset.x > 0 || info.velocity.x > 0) {
-        // Swipe para direita = Fácil
-        setExitDirection('right');
-        handleDifficulty('easy', true);
-      } else {
-        // Swipe para esquerda = Difícil
-        setExitDirection('left');
-        handleDifficulty('difficult', true);
-      }
-    } else if (Math.abs(info.offset.y) > swipeThreshold || Math.abs(info.velocity.y) > velocityThreshold) {
-      if (info.offset.y < 0 || info.velocity.y < 0) {
+    // Verifica movimento predominante (vertical ou horizontal)
+    const isVerticalSwipe = Math.abs(info.offset.y) > Math.abs(info.offset.x);
+    
+    if (isVerticalSwipe) {
+      // Swipe vertical (para cima ou para baixo)
+      if ((Math.abs(info.offset.y) > verticalSwipeThreshold || Math.abs(info.velocity.y) > velocityThreshold) && 
+          (info.offset.y < 0 || info.velocity.y < 0)) {
         // Swipe para cima = Médio
         setExitDirection('up');
         handleDifficulty('medium', true);
+      } else {
+        // Volta para posição original se não passou do threshold
+        x.set(0);
+        y.set(0);
       }
     } else {
-      // Volta para posição original se não passou do threshold
-      x.set(0);
-      y.set(0);
+      // Swipe horizontal (para esquerda ou direita)
+      if (Math.abs(info.offset.x) > swipeThreshold || Math.abs(info.velocity.x) > velocityThreshold) {
+        if (info.offset.x > 0 || info.velocity.x > 0) {
+          // Swipe para direita = Fácil
+          setExitDirection('right');
+          handleDifficulty('easy', true);
+        } else {
+          // Swipe para esquerda = Difícil
+          setExitDirection('left');
+          handleDifficulty('difficult', true);
+        }
+      } else {
+        // Volta para posição original se não passou do threshold
+        x.set(0);
+        y.set(0);
+      }
     }
   };
   
@@ -269,16 +296,19 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
     setExitDirection(null);
     setShowFeedback(null);
     setSwipeDirection(null);
-    // Reset valores de movimento ao mudar card
-    x.set(0);
-    y.set(0);
+    // CRÍTICO: Reset explícito dos valores de movimento para garantir que voltam ao centro
+    // Usa setTimeout para garantir que acontece após o render
+    setTimeout(() => {
+      x.set(0);
+      y.set(0);
+    }, 0);
     // Mostrar dica apenas no primeiro card
     if (currentCardIndex === 0) {
       setShowSwipeHint(true);
     } else {
       setShowSwipeHint(false);
     }
-  }, [currentCardIndex]);
+  }, [currentCardIndex, x, y]);
 
   if (!currentCard) {
     return <div>Nenhum flashcard disponível</div>;
@@ -332,33 +362,70 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                   {!isExiting && (
                     <motion.div
                       key={currentCardIndex}
-                      drag={isFlipped && !hasVoted ? "x" : false} // CRÍTICO: Só permite arrastar após virar o card E se ainda não votou
-                      dragConstraints={{ left: 0, right: 0 }}
+                      drag={isFlipped && !hasVoted ? true : false} // CRÍTICO: Permite arrastar em todas as direções após virar o card E se ainda não votou
+                      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                       dragElastic={0.2}
                       onDragStart={handleDragStart}
                       onDragEnd={handleDragEnd}
-                      style={{
-                        x,
-                        y,
-                        rotate,
-                        opacity,
+                      onDrag={(_event, info) => {
+                        // Atualiza valores de movimento para feedback visual
+                        x.set(info.offset.x);
+                        y.set(info.offset.y);
+                        
+                        // Resetar isExiting quando começa a arrastar um novo card
+                        if (isExiting) {
+                          setIsExiting(false);
+                        }
+                        
+                        // Detecta direção do swipe em tempo real
+                        if (Math.abs(info.offset.y) > Math.abs(info.offset.x)) {
+                          // Movimento vertical
+                          if (info.offset.y < -30) {
+                            setSwipeDirection(null); // Limpa direção horizontal para mostrar indicador vertical
+                          } else {
+                            setSwipeDirection(null);
+                          }
+                        } else {
+                          // Movimento horizontal
+                          if (info.offset.x < -50) {
+                            setSwipeDirection('left');
+                          } else if (info.offset.x > 50) {
+                            setSwipeDirection('right');
+                          } else {
+                            setSwipeDirection(null);
+                          }
+                        }
                       }}
-                      initial={{ scale: 0.9, opacity: 0, rotate: -10 }}
-                      animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                      exit={{
-                        x: exitDirection === 'left' ? -500 : exitDirection === 'right' ? 500 : 0,
-                        y: exitDirection === 'up' ? -500 : 0,
-                        opacity: 0,
-                        scale: 0.8,
-                        rotate: exitDirection === 'left' ? -30 : exitDirection === 'right' ? 30 : 0,
-                      }}
-                      transition={{ 
-                        type: "spring", 
-                        stiffness: 150, // Reduzido para movimento mais suave e natural
-                        damping: 20, // Reduzido para movimento mais suave
-                        mass: 1.2, // Adicionado massa para movimento mais pesado/natural
-                        duration: 0.8 // Aumentado para transição mais lenta e natural
-                      }}
+                  style={{
+                    x,
+                    y,
+                    rotate,
+                    opacity,
+                  }}
+                  initial={{ scale: 0.9, opacity: 0, rotate: -10, x: 0, y: 0 }}
+                  animate={{ 
+                    scale: 1, 
+                    opacity: 1, 
+                    rotate: 0, 
+                    x: 0,  // CRÍTICO: Sempre força para o centro
+                    y: 0   // CRÍTICO: Sempre força para o centro
+                  }}
+                  exit={{
+                    x: exitDirection === 'left' ? -500 : exitDirection === 'right' ? 500 : 0,
+                    y: exitDirection === 'up' ? -500 : 0,
+                    opacity: 0,
+                    scale: 0.8,
+                    rotate: exitDirection === 'left' ? -30 : exitDirection === 'right' ? 30 : 0,
+                  }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 150, // Reduzido para movimento mais suave e natural
+                    damping: 20, // Reduzido para movimento mais suave
+                    mass: 1.2, // Adicionado massa para movimento mais pesado/natural
+                    duration: 0.8 // Aumentado para transição mais lenta e natural
+                  }}
+                  // CRÍTICO: Força reset quando a key muda (novo card)
+                  key={currentCardIndex}
                       className={`w-full h-full ${isFlipped ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
                     >
                       <div 
@@ -392,74 +459,88 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
                             <div className="mb-4">
                               <Lightbulb className="text-white h-8 w-8 drop-shadow-lg" />
                             </div>
-                            <h3 className="text-base md:text-lg font-semibold text-white mb-4 drop-shadow-lg" data-testid="text-answer">
+                            <h3 className="text-base md:text-lg font-semibold text-white mb-4 drop-shadow-lg px-4 sm:px-0 mt-8 sm:mt-0" data-testid="text-answer">
                               {currentCard.answer}
                             </h3>
-                            <p className="text-xs text-white/80 mb-2">
+                            <p className="text-xs text-white/80 mb-2 px-4 sm:px-0">
                               {hasVoted ? "Dificuldade marcada! Aguarde o próximo card..." : "Arraste para marcar dificuldade"}
                             </p>
                             
-                            {/* CRÍTICO: Indicadores de swipe nas bordas na resposta também */}
-                            <div className="absolute inset-0 pointer-events-none">
-                              {/* Indicador esquerda - Difícil */}
+                            {/* CRÍTICO: Indicadores de swipe nas bordas - mais transparentes e nas extremidades */}
+                            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                              {/* Indicador esquerda - Difícil - Nas bordas laterais */}
                               <motion.div
-                                className="absolute left-2 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2"
+                                className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 sm:gap-2"
                                 animate={{ 
-                                  opacity: swipeDirection === 'left' ? 1 : 0.6, // CRÍTICO: Sempre visível quando card virado
-                                  scale: swipeDirection === 'left' ? 1.2 : 1,
-                                  x: swipeDirection === 'left' ? 10 : 0
+                                  opacity: swipeDirection === 'left' ? 0.9 : 0.25, // Muito mais transparente quando não ativo
+                                  scale: swipeDirection === 'left' ? 1.15 : 0.9,
+                                  x: swipeDirection === 'left' ? 5 : 0
                                 }}
                                 transition={{ type: "spring", stiffness: 300 }}
                               >
-                                <div className="px-3 py-2 bg-red-600 text-white rounded-lg font-semibold text-xs shadow-lg flex items-center gap-1">
-                                  <ArrowLeft className="h-4 w-4" />
-                                  Difícil
+                                <div className="px-2 sm:px-3 py-1 sm:py-2 bg-red-600/90 backdrop-blur-sm text-white rounded-lg font-semibold text-xs shadow-lg flex items-center gap-1 border border-white/20">
+                                  <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  <span className="hidden sm:inline">Difícil</span>
                                 </div>
                                 <motion.div
-                                  animate={{ x: [-5, 5, -5] }}
+                                  animate={{ x: [-3, 3, -3] }}
                                   transition={{ repeat: Infinity, duration: 1.5 }}
-                                  className="text-white/90"
+                                  className="text-white/60"
                                 >
-                                  <Hand className="h-6 w-6 rotate-90" />
+                                  <Hand className="h-4 w-4 sm:h-5 sm:w-5 rotate-90" />
                                 </motion.div>
                               </motion.div>
 
-                              {/* Indicador direita - Fácil */}
+                              {/* Indicador direita - Fácil - Nas bordas laterais */}
                               <motion.div
-                                className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2"
+                                className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 sm:gap-2"
                                 animate={{ 
-                                  opacity: swipeDirection === 'right' ? 1 : 0.6, // CRÍTICO: Sempre visível quando card virado
-                                  scale: swipeDirection === 'right' ? 1.2 : 1,
-                                  x: swipeDirection === 'right' ? -10 : 0
+                                  opacity: swipeDirection === 'right' ? 0.9 : 0.25, // Muito mais transparente quando não ativo
+                                  scale: swipeDirection === 'right' ? 1.15 : 0.9,
+                                  x: swipeDirection === 'right' ? -5 : 0
                                 }}
                                 transition={{ type: "spring", stiffness: 300 }}
                               >
-                                <div className="px-3 py-2 bg-green-600 text-white rounded-lg font-semibold text-xs shadow-lg flex items-center gap-1">
-                                  Fácil
-                                  <ArrowRight className="h-4 w-4" />
+                                <div className="px-2 sm:px-3 py-1 sm:py-2 bg-green-600/90 backdrop-blur-sm text-white rounded-lg font-semibold text-xs shadow-lg flex items-center gap-1 border border-white/20">
+                                  <span className="hidden sm:inline">Fácil</span>
+                                  <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
                                 </div>
                                 <motion.div
-                                  animate={{ x: [5, -5, 5] }}
+                                  animate={{ x: [3, -3, 3] }}
                                   transition={{ repeat: Infinity, duration: 1.5 }}
-                                  className="text-white/90"
+                                  className="text-white/60"
                                 >
-                                  <Hand className="h-6 w-6 -rotate-90" />
+                                  <Hand className="h-4 w-4 sm:h-5 sm:w-5 -rotate-90" />
                                 </motion.div>
                               </motion.div>
 
-                              {/* Indicador topo - Médio */}
+                              {/* Indicador topo - Médio - Mais transparente e menor */}
                               <motion.div
-                                className="absolute top-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+                                className="absolute top-1 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-10"
                                 animate={{ 
-                                  opacity: 0.6, // CRÍTICO: Sempre visível quando card virado
-                                  y: [0, -5, 0]
+                                  opacity: (Math.abs(y.get()) < -30) ? 0.9 : 0.25, // Muito mais transparente quando não ativo
+                                  y: [0, -3, 0],
+                                  scale: (Math.abs(y.get()) < -30) ? 1.1 : 0.9
                                 }}
                                 transition={{ repeat: Infinity, duration: 1.5 }}
                               >
-                                <div className="px-3 py-2 bg-yellow-500 text-white rounded-lg font-semibold text-xs shadow-lg flex items-center gap-1">
-                                  <ArrowUp className="h-4 w-4" />
-                                  Médio
-                                </div>
+                                <motion.div
+                                  className="px-2 sm:px-3 py-1 bg-yellow-500/90 backdrop-blur-sm text-white rounded-lg font-semibold text-xs shadow-lg flex items-center gap-1 border border-white/20"
+                                  animate={{
+                                    opacity: (Math.abs(y.get()) < -30) ? 1 : 0.8,
+                                  }}
+                                >
+                                  <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  <span className="hidden sm:inline">Médio</span>
+                                  <span className="sm:hidden">Médio</span>
+                                </motion.div>
+                                <motion.div
+                                  animate={{ y: [-2, 2, -2] }}
+                                  transition={{ repeat: Infinity, duration: 1.2 }}
+                                  className="text-white/50"
+                                >
+                                  <Hand className="h-3 w-3 sm:h-4 sm:w-4 rotate-180" />
+                                </motion.div>
                               </motion.div>
                             </div>
 
