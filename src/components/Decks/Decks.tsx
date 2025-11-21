@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -10,8 +11,7 @@ import {
 } from "../../hooks/useFlashcards";
 import { CreateDeckDialog } from "../CreateDeckDialog";
 import { flashcardsApi, quizzesApi } from "../../api";
-import type { FlashcardSet } from "../../types";
-import type { Flashcard, Quiz } from "../../types";
+import type { FlashcardSet, Quiz } from "../../types";
 import { BookOpen, Search, ChevronLeft, ChevronRight, X, Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import DeckItem from "./DeckItem";
@@ -22,14 +22,15 @@ import { EmptyState } from "../ui/empty-state";
 import { SkeletonCard } from "../ui/skeleton-card";
 
 interface DecksProps {
-  onStartStudy: (flashcards: Flashcard[]) => void;
-  onStartQuiz?: (quizzes: Quiz[], deckColor?: string) => void;
+  onStartStudy?: (flashcards: Flashcard[]) => void; // Opcional para compatibilidade
+  onStartQuiz?: (quizzes: Quiz[], deckColor?: string) => void; // Opcional para compatibilidade
 }
 
 const DECKS_PER_PAGE = 5;
 
 export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const { data: decks = [], isLoading: isLoadingDecks } = useFlashcardSets();
   const deleteDeck = useDeleteFlashcardSet();
   const updateDeck = useUpdateFlashcardSet();
@@ -112,11 +113,11 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
         return;
       }
 
-      // Verificar se é quiz ou flashcard e buscar os dados apropriados
+      // Verificar se é quiz ou flashcard
       const isQuiz = deck.type === 'quiz';
       
       if (isQuiz) {
-        // Buscar quizzes e passar diretamente para QuizMode
+        // Buscar quizzes para validar
         const quizzes = await quizzesApi.getQuizzesBySetId(deckId);
         
         if (quizzes.length === 0) {
@@ -128,30 +129,15 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
           return;
         }
         
-        // Se houver callback específico para quiz, usar ele
+        // Usar rota diretamente - StudyPage vai detectar que é quiz e renderizar QuizMode
+        setLocation(`/study/${deckId}`);
+        
+        // Se houver callback específico para quiz (compatibilidade), também chamar
         if (onStartQuiz) {
           onStartQuiz(quizzes, deck?.color || "#3B82F6");
-        } else {
-          // Fallback: converter para flashcard (compatibilidade)
-          const items = quizzes.map((quiz: Quiz) => ({
-            id: quiz.id,
-            question: quiz.question,
-            answer: quiz.correct_answer,
-            set_id: quiz.set_id,
-            review_count: 0,
-            created_at: quiz.created_at,
-            created_by: quiz.created_by || '',
-            updated_at: quiz.updated_at,
-            updated_by: quiz.updated_by,
-            type: 'quiz' as const,
-            alternatives: quiz.alternatives,
-            correct_answer: quiz.correct_answer,
-            color: deck?.color || "#3B82F6",
-          }));
-          onStartStudy(items);
         }
       } else {
-        // Buscar flashcards normalmente
+        // Buscar flashcards para validar
         const flashcards = await flashcardsApi.getFlashcardsBySetId(deckId);
         
         if (flashcards.length === 0) {
@@ -163,13 +149,13 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
           return;
         }
         
-        // Adicionar cor do deck aos flashcards
-        const items = flashcards.map(card => ({
-          ...card,
-          color: deck?.color || "#3B82F6",
-        }));
+        // Usar rota diretamente - StudyPage vai detectar que é flashcard e renderizar StudyMode
+        setLocation(`/study/${deckId}`);
         
-        onStartStudy(items);
+        // Se houver callback (compatibilidade), também chamar
+        if (onStartStudy) {
+          onStartStudy(flashcards);
+        }
       }
     } catch (error: any) {
       const deck = decks.find((d: FlashcardSet) => d.id === deckId);

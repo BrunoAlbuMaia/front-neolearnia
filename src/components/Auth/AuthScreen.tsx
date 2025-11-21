@@ -58,7 +58,9 @@ export default function AuthScreen({ onAuthSuccess }: { onAuthSuccess: () => voi
             {/* Logo em destaque */}
             <img
               src={logo_mymemorize}
-              alt="logo_mymemorize"
+              alt="MyMemorize Logo"
+              loading="lazy"
+              decoding="async"
               className="relative w-48 h-48 sm:w-32 sm:h-32 object-contain drop-shadow-[0_0_30px_hsl(262,83%,58%,0.5)] transition-transform duration-500 hover:scale-110 z-10"
             />
           </motion.div>

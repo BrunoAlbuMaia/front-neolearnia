@@ -1,17 +1,19 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import AuthScreen from "../../components/Auth/AuthScreen";
 import Dashboard from "../../components/Dashboard";
-import { AnalyticsPage } from "../../components/AnalyticsPage";
 import { type Flashcard } from "../../../shared/schema";
 import { useToast } from "../../hooks/use-toast";
-import { StudyPage } from "./StudyPage";
-import { QuizPage } from "./QuizPage";
 import { useUser } from "../../hooks/useUser";
-import OnboardingScreen from "../../components/Auth/Onboarding/OnboardingScreen";
 import { Spinner } from "../../components/ui/spinner";
 import { type Quiz } from "../../types";
+
+// Lazy load de componentes pesados para melhor performance
+const AnalyticsPage = lazy(() => import("../../components/AnalyticsPage").then(m => ({ default: m.AnalyticsPage })));
+const StudyPage = lazy(() => import("./StudyPage").then(m => ({ default: m.StudyPage })));
+const QuizPage = lazy(() => import("./QuizPage").then(m => ({ default: m.QuizPage })));
+const OnboardingScreen = lazy(() => import("../../components/Auth/Onboarding/OnboardingScreen"));
 
 type Screen = 'auth' | 'dashboard' | 'study' | 'quiz' | 'analytics' | 'reviewMode' | 'onboarding';
 
@@ -128,19 +130,33 @@ export default function Home() {
       case 'auth':
         return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
       case 'study':
-        return <StudyPage flashcards={studyFlashcards} onBack={handleBackToDashboard} />;
+        return (
+          <Suspense fallback={<Spinner size="lg" text="Carregando modo de estudo..." />}>
+            <StudyPage flashcards={studyFlashcards} onBack={handleBackToDashboard} />
+          </Suspense>
+        );
       case 'quiz':
-        return <QuizPage quizzes={studyQuizzes} onBack={handleBackToDashboard} deckColor={quizDeckColor} />;
+        return (
+          <Suspense fallback={<Spinner size="lg" text="Carregando quiz..." />}>
+            <QuizPage quizzes={studyQuizzes} onBack={handleBackToDashboard} deckColor={quizDeckColor} />
+          </Suspense>
+        );
       case 'analytics':
         return (
           <div className="min-h-screen bg-background">
             <div className="max-w-6xl mx-auto p-4">
-              <AnalyticsPage />
+              <Suspense fallback={<Spinner size="lg" text="Carregando analytics..." />}>
+                <AnalyticsPage />
+              </Suspense>
             </div>
           </div>
         );
       case 'onboarding':
-        return <OnboardingScreen />;
+        return (
+          <Suspense fallback={<Spinner size="lg" text="Carregando onboarding..." />}>
+            <OnboardingScreen />
+          </Suspense>
+        );
       default:
         return (
           <Dashboard 

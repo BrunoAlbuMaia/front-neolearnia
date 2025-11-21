@@ -1,16 +1,19 @@
 import { Switch, Route, useLocation } from "wouter";
 import { useEffect, lazy, Suspense } from "react";
-import Home from "../pages/Home/index";
-import NotFound from "../pages/not-found";
-import Navbar from "../components/ui/navbar";
 import { useAuth } from "../context/AuthContext";
 import { Spinner } from "../components/ui/spinner";
+import Navbar from "../components/ui/navbar";
 
 // Lazy load de páginas pesadas para melhor performance
-const AnalyticsPage = lazy(() => import("../pages/Home/AnalyticsPage").then(m => ({ default: m.AnalyticsPage })));
-const ReviewModePage = lazy(() => import("../pages/Home/ReviewModePage").then(m => ({ default: m.ReviewModePage })));
-const PlansPage = lazy(() => import("../pages/Plans/PlansPage"));
+const AuthPage = lazy(() => import("../pages/Auth/AuthPage"));
 const DashboardPage = lazy(() => import("../pages/Dashboard/DashboardPage").then(m => ({ default: m.DashboardPage })));
+const StudyPage = lazy(() => import("../pages/Study/StudyPage"));
+const ReviewPage = lazy(() => import("../pages/Review/ReviewPage"));
+const HomePage = lazy(() => import("../pages/Home/HomePage").then(m => ({ default: m.HomePage })));
+const AnalyticsPage = lazy(() => import("../pages/Analytics/AnalyticsPage"));
+const PlansPage = lazy(() => import("../pages/Plans/PlansPage"));
+const OnboardingPage = lazy(() => import("../pages/Onboarding/OnboardingPage"));
+const NotFoundPage = lazy(() => import("../pages/not-found"));
 
 // Componente de loading para páginas
 const PageLoader = () => (
@@ -23,76 +26,136 @@ export function AppRouter() {
   const { user, logoutUser, loading } = useAuth();
   const [location, setLocation] = useLocation();
   
-  // Se não há usuário, sempre mostrar a tela de login (Home)
-  // Isso deve acontecer antes do check de loading para evitar tela preta durante logout
+  // Redirecionar usuários não autenticados para login
   useEffect(() => {
-    if (!user && location !== "/") {
-      setLocation("/");
+    if (!user && !loading && location !== "/login" && location !== "/") {
+      setLocation("/login");
     }
-  }, [user, location, setLocation]);
+  }, [user, loading, location, setLocation]);
 
-  // Se não há usuário, mostrar apenas a tela de login (Home)
-  // Mesmo durante loading, se não há user, mostramos o Home que tratará o loading internamente
-  if (!user) {
-    return <Home />;
+  // Redirecionar usuários autenticados da rota raiz para home
+  useEffect(() => {
+    if (user && !loading && location === "/") {
+      // Não redirecionar, deixar HomePage ser renderizada
+      // HomePage vai decidir se mostra dashboard ou onboarding
+    }
+  }, [user, loading, location, setLocation]);
+
+  // Funções de navegação
+  const navigateToHome = () => setLocation("/");
+  const navigateToDashboard = () => setLocation("/dashboard");
+  const navigateToSettings = () => setLocation("/settings");
+  const navigateToReviewMode = () => setLocation("/review");
+  const navigateToPlans = () => setLocation("/plans");
+  const navigateToAnalytics = () => setLocation("/analytics");
+
+  // Se não há usuário, mostrar apenas tela de login
+  if (!user && !loading) {
+    return (
+      <Switch>
+        <Route path="/login">
+          <Suspense fallback={<PageLoader />}>
+            <AuthPage />
+          </Suspense>
+        </Route>
+        <Route path="/">
+          <Suspense fallback={<PageLoader />}>
+            <AuthPage />
+          </Suspense>
+        </Route>
+        <Route>
+          <Suspense fallback={<PageLoader />}>
+            <AuthPage />
+          </Suspense>
+        </Route>
+      </Switch>
+    );
   }
 
-  // Mostrar loading apenas se há user (não durante logout)
+  // Mostrar loading durante autenticação
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen text-gray-500">
-        Carregando...
+      <div className="flex items-center justify-center h-screen">
+        <Spinner size="lg" text="Carregando..." />
       </div>
     );
   }
 
-  const navigateToHome = () => setLocation("/");
-  const navigateToDashboard = () => setLocation("/dashboard");
-  const navigateToSettings = () => setLocation("/settings");
-  const navigateToReviewMode = () => setLocation("/reviewMode");
-  const navigateToPlans = () => setLocation("/plans");
-
   // Renderizar navbar apenas quando user existe
-  // O Home component irá gerenciar se mostra AuthScreen ou não
-  const shouldShowNavbar = !!user;
-
   return (
     <>
-      {shouldShowNavbar && (
-        <Navbar 
-          user={user} 
-          onLogout={logoutUser} 
-          onNavigateToDashboard={navigateToDashboard} 
-          onNavigateToReviewMode={navigateToReviewMode}
-          onNavigateToHome={navigateToHome} 
-          onNavigateToSettings={navigateToSettings}
-          onNavigateToPlans={navigateToPlans}
-        />
-      )}
+      <Navbar 
+        user={user} 
+        onLogout={logoutUser} 
+        onNavigateToDashboard={navigateToDashboard} 
+        onNavigateToReviewMode={navigateToReviewMode}
+        onNavigateToHome={navigateToHome} 
+        onNavigateToSettings={navigateToSettings}
+        onNavigateToPlans={navigateToPlans}
+        onNavigateToAnalytics={navigateToAnalytics}
+      />
 
       <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/plans">
+        {/* Rotas públicas */}
+        <Route path="/login">
           <Suspense fallback={<PageLoader />}>
-            <PlansPage />
+            <AuthPage />
           </Suspense>
         </Route>
-        <Route path="/analytics">
+
+        {/* Rotas protegidas */}
+        {/* HomePage - Tela inicial (usa Dashboard component) */}
+        <Route path="/">
           <Suspense fallback={<PageLoader />}>
-            <AnalyticsPage />
+            <HomePage />
           </Suspense>
         </Route>
+
+        {/* DashboardPage - Página de analytics/estatísticas */}
         <Route path="/dashboard">
           <Suspense fallback={<PageLoader />}>
             <DashboardPage />
           </Suspense>
         </Route>
-        <Route path="/reviewMode">
+
+        <Route path="/study/:deckId">
+          {(params) => (
+            <Suspense fallback={<PageLoader />}>
+              <StudyPage deckId={params.deckId} />
+            </Suspense>
+          )}
+        </Route>
+
+        <Route path="/review">
           <Suspense fallback={<PageLoader />}>
-            <ReviewModePage />
+            <ReviewPage />
           </Suspense>
         </Route>
-        <Route component={NotFound} />
+
+        <Route path="/analytics">
+          <Suspense fallback={<PageLoader />}>
+            <DashboardPage />
+          </Suspense>
+        </Route>
+
+        <Route path="/plans">
+          <Suspense fallback={<PageLoader />}>
+            <PlansPage />
+          </Suspense>
+        </Route>
+
+        <Route path="/onboarding">
+          <Suspense fallback={<PageLoader />}>
+            <OnboardingPage />
+          </Suspense>
+        </Route>
+
+        {/* 404 */}
+        <Route>
+          <Suspense fallback={<PageLoader />}>
+            <NotFoundPage />
+          </Suspense>
+        </Route>
       </Switch>
     </>
   );

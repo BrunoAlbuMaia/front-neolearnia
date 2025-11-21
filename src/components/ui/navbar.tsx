@@ -3,7 +3,8 @@ import { Button } from "./button";
 import { ThemeToggle } from "../ThemeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "./sheet"; 
 import { Brain, BarChart3, LogOut, Menu, Home, Settings, CircleArrowOutDownLeftIcon, Crown } from "lucide-react";
-import React, { useState } from "react";
+import React, { useMemo } from "react";
+import { useLocation } from "wouter";
 import logo_mymemorize from "../../assets/logo_mymemorize.png";
 
 interface SidebarProps {
@@ -14,18 +15,18 @@ interface SidebarProps {
   onNavigateToHome: () => void;
   onNavigateToSettings: () => void;
   onNavigateToPlans: () => void;
+  onNavigateToAnalytics?: () => void;
 }
 
-// Navegação
-const navigationItems = [
-  { name: "Início", icon: Home, action: 'onNavigateToHome', dataTestId: 'sidebar-link-home' },
-  { name: "Dashboard", icon: BarChart3, action: 'onNavigateToDashboard', dataTestId: 'sidebar-link-dasboard' },
-  { name: "Revisão Diária", icon: CircleArrowOutDownLeftIcon, action: 'onNavigateToReviewMode', dataTestId: 'sidebar-link-reviewMode' },
- 
-  //{ name: "Planos", icon: Crown, action: 'onNavigateToPlans', dataTestId: 'sidebar-link-plans' },
-  //{ name: "Configurações", icon: Settings, action: 'onNavigateToSettings', dataTestId: 'sidebar-link-settings' },
-  
-];
+// Mapeamento de rotas para nomes de navegação
+const routeToName: Record<string, string> = {
+  '/dashboard': 'Dashboard',
+  '/': 'Home',
+  '/review': 'Revisão Diária',
+  '/analytics': 'Analytics',
+  '/plans': 'Planos',
+  '/settings': 'Configurações',
+};
 
 interface NavLinkProps {
   name: string;
@@ -58,18 +59,53 @@ export default function Sidebar({
   onNavigateToDashboard, 
   onNavigateToHome,
   onNavigateToSettings,
-  onNavigateToPlans
+  onNavigateToPlans,
+  onNavigateToAnalytics
 }: SidebarProps) {
-  const actionsMap = {
-    onNavigateToHome,
-    onNavigateToReviewMode,
-    onNavigateToDashboard,
-    onNavigateToSettings,
-    onNavigateToPlans
-  };
+  const [location] = useLocation();
+  
+  // Determinar item ativo baseado na rota atual
+  const activeItem = useMemo(() => {
+    // Verificar rotas específicas primeiro
+    if (location.startsWith('/study')) {
+      return null; // Não destacar nada durante estudo
+    }
+    return routeToName[location] || 'Dashboard';
+  }, [location]);
 
-  // Estado para o item ativo
-  const [activeItem, setActiveItem] = useState('Início');
+  // Navegação com mapeamento de rotas
+  interface NavItem {
+    name: string;
+    icon: React.ElementType;
+    action: () => void;
+    route: string;
+    dataTestId: string;
+  }
+
+  const navigationItems: NavItem[] = useMemo(() => [
+  
+    { 
+      name: "Home", 
+      icon: Home, 
+      action: onNavigateToHome, 
+      route: '/',
+      dataTestId: 'sidebar-link-dashboard' 
+    },
+    { 
+      name: "Daily review", 
+      icon: CircleArrowOutDownLeftIcon, 
+      action: onNavigateToReviewMode, 
+      route: '/review',
+      dataTestId: 'sidebar-link-reviewMode' 
+    },
+    ...(onNavigateToAnalytics ? [{
+      name: "Analytics",
+      icon: BarChart3,
+      action: onNavigateToAnalytics,
+      route: '/analytics',
+      dataTestId: 'sidebar-link-analytics'
+    }] : []),
+  ] as NavItem[], [onNavigateToDashboard, onNavigateToReviewMode, onNavigateToAnalytics]);
 
   const sidebarContent = (
     <div className="flex flex-col h-full p-4 bg-gradient-to-br from-card via-card to-primary/5">
@@ -80,7 +116,9 @@ export default function Sidebar({
         
         <img
           src={logo_mymemorize}
-          alt="logo_mymemorize"
+          alt="MyMemorize Logo"
+          loading="lazy"
+          decoding="async"
           className="relative w-32 h-32 drop-shadow-[0_0_20px_hsl(262,83%,58%,0.4)] transition-transform duration-300 hover:scale-105 z-10"
         />
         <h1 className="mt-4 text-2xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
@@ -91,22 +129,16 @@ export default function Sidebar({
 
       {/* Navegação */}
       <div className="flex flex-col space-y-1 flex-grow">
-        {navigationItems.map(item => {
-          const actionFn = () => {
-            setActiveItem(item.name);
-            (actionsMap[item.action as keyof typeof actionsMap])();
-          };
-          return (
-            <NavLink
-              key={item.name}
-              name={item.name}
-              Icon={item.icon}
-              onClick={actionFn}
-              isActive={activeItem === item.name}
-              dataTestId={item.dataTestId}
-            />
-          );
-        })}
+        {navigationItems.map((item: NavItem) => (
+          <NavLink
+            key={item.name}
+            name={item.name}
+            Icon={item.icon}
+            onClick={item.action}
+            isActive={activeItem === item.name}
+            dataTestId={item.dataTestId}
+          />
+        ))}
       </div>
 
       {/* Rodapé */}
@@ -158,7 +190,9 @@ export default function Sidebar({
             {/* Logo */}
             <img
               src={logo_mymemorize}
-              alt="logo_mymemorize"
+              alt="MyMemorize Logo"
+              loading="lazy"
+              decoding="async"
               className="relative w-12 h-12 object-contain drop-shadow-[0_0_15px_hsl(262,83%,58%,0.5)] transition-transform duration-300 group-hover:scale-110 z-10"
             />
           </div>

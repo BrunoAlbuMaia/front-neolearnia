@@ -1,6 +1,6 @@
 import { Card } from "../components/ui/card";
 import { type Flashcard } from "../../shared/schema";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Cards, Play } from "lucide-react";
 
 interface FlashcardPreviewProps {
   flashcards: Flashcard[];
@@ -12,7 +12,7 @@ export default function FlashcardPreview({ flashcards, onStartStudy }: Flashcard
     return (
       <div className="text-center py-12">
         <div className="mx-auto h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
-          <i className="fas fa-cards-blank text-muted-foreground text-xl"></i>
+          <Cards className="h-6 w-6 text-muted-foreground" />
         </div>
         <p className="text-muted-foreground text-sm mb-4">Nenhum flashcard gerado ainda</p>
         <p className="text-muted-foreground text-xs">Cole um texto e clique em "Gerar Flashcards" para começar</p>
@@ -50,7 +50,7 @@ export default function FlashcardPreview({ flashcards, onStartStudy }: Flashcard
           className="w-full bg-secondary text-secondary-foreground py-3 px-4 rounded-lg font-medium hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
           data-testid="button-start-study"
         >
-          <i className="fas fa-play mr-2"></i>
+          <Play className="h-4 w-4 mr-2" />
           Iniciar Modo de Estudo
         </button>
       </div>
