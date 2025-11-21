@@ -4,7 +4,7 @@ import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Brain, Clock, TrendingUp, Target, Timer, BarChart3 } from "lucide-react";
-import { useAnalytics, type AnalyticsView } from "../hooks/useAnalytics";
+
 
 export function AnalyticsPage() {
   const [view, setView] = useState<AnalyticsView>("progress");
