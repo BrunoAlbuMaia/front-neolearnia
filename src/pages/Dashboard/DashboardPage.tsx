@@ -6,6 +6,7 @@ import {
   useDashboardReviewSchedule,
   useDashboardSpeedAnalysis,
 } from "../../hooks/useDashboard";
+import { useRetention, useGamification } from "../../hooks/useAnalytics";
 import { Spinner } from "../../components/ui/spinner";
 import { 
   BookOpen, 
@@ -51,8 +52,12 @@ export function DashboardPage() {
   const { data: difficulty, isLoading: loadingDifficulty } = useDashboardDifficulty();
   const { data: reviewSchedule, isLoading: loadingReviewSchedule } = useDashboardReviewSchedule();
   const { data: speedAnalysis, isLoading: loadingSpeedAnalysis } = useDashboardSpeedAnalysis();
+  
+  // Novos hooks de analytics (com cache otimizado)
+  const { data: retention, isLoading: loadingRetention } = useRetention();
+  const { data: gamification, isLoading: loadingGamification } = useGamification();
 
-  const isLoading = loadingOverview || loadingActivity || loadingDifficulty || loadingReviewSchedule || loadingSpeedAnalysis;
+  const isLoading = loadingOverview || loadingActivity || loadingDifficulty || loadingReviewSchedule || loadingSpeedAnalysis || loadingRetention || loadingGamification;
 
   // Preparar dados para gráfico de pizza
   const difficultyData = difficulty
@@ -166,6 +171,82 @@ export function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Cards de Retenção e Gamificação */}
+        {(retention || gamification) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Taxa de Retenção */}
+            {retention && (
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Taxa de Retenção</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {retention.overallRetentionRate.toFixed(1)}%
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Retenção geral de memorização
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Cards Dominados */}
+            {retention && (
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Cards Dominados</CardTitle>
+                  <Award className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{retention.cardsMastered}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Cards com alta retenção
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Streak Atual */}
+            {gamification && (
+              <Card className="shadow-sm hover:shadow-md transition-shadow border-primary/20">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Sequência Atual</CardTitle>
+                  <Zap className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-primary">
+                    {gamification.currentStreak} 🔥
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {gamification.longestStreak > gamification.currentStreak && 
+                      `Recorde: ${gamification.longestStreak} dias`}
+                    {gamification.longestStreak === gamification.currentStreak && 
+                      "Novo recorde!"}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Cards Precisando Revisão */}
+            {retention && (
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Precisam Revisão</CardTitle>
+                  <RotateCcw className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{retention.cardsNeedingReview}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Cards devidos para hoje
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
 
         {/* Gráficos */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

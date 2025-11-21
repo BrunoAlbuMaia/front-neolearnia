@@ -11,10 +11,12 @@ import { useGenerateQuiz } from "../hooks/useQuizzes";
 import type { Flashcard, Quiz } from "../types";
 import PdfPreviewer from "./ui/pdfPreviewer";
 import { ColorPicker } from "./ui/color-picker";
-import { Wand2, Loader2, Plus, Sparkles, Palette, HelpCircle, CheckCircle2, BookOpen } from "lucide-react";
+import { Wand2, Loader2, Plus, Sparkles, Palette, HelpCircle, CheckCircle2, BookOpen, RotateCcw, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SkeletonCard } from "./ui/skeleton-card";
 import { H2, H3, H4, Lead, Body, Small, Muted } from "./ui/typography";
+import { useReviewSummary } from "../hooks/useReviews";
+import { useLocation } from "wouter";
 
 // Lazy load do componente Decks para melhor performance
 const Decks = lazy(() => import('./Decks/Decks'));
@@ -36,6 +38,8 @@ export default function Dashboard({
   onStartQuiz,
   onNavigateToAnalytics 
 }: DashboardProps) {
+  const [, setLocation] = useLocation();
+  const { data: reviewSummary, isLoading: isLoadingReview } = useReviewSummary();
   const [studyContent, setStudyContent] = useState("");
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
   const [newDeckTitle, setNewDeckTitle] = useState("");
@@ -191,6 +195,70 @@ export default function Dashboard({
             </Lead>
           </div>
         </motion.div>
+
+        {/* Card de Revisão Diária - Destaque Proeminente */}
+        {!isLoadingReview && reviewSummary && (reviewSummary.totalDue > 0 || reviewSummary.overdue > 0) && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="relative"
+          >
+            <Card className={`border-2 shadow-lg transition-all hover:shadow-xl ${
+              reviewSummary.overdue > 0 
+                ? 'border-red-500 bg-red-50 dark:bg-red-950/20' 
+                : 'border-primary bg-primary/5'
+            }`}>
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-4 flex-1">
+                    <div className={`p-3 rounded-lg ${
+                      reviewSummary.overdue > 0 
+                        ? 'bg-red-500 text-white' 
+                        : 'bg-primary text-primary-foreground'
+                    }`}>
+                      {reviewSummary.overdue > 0 ? (
+                        <AlertCircle className="h-6 w-6" />
+                      ) : (
+                        <RotateCcw className="h-6 w-6" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <H3 className="mb-1">
+                        {reviewSummary.overdue > 0 
+                          ? `⚠️ ${reviewSummary.overdue} revis${reviewSummary.overdue > 1 ? 'ões' : 'ão'} atrasada${reviewSummary.overdue > 1 ? 's' : ''}!`
+                          : `📚 ${reviewSummary.dueToday} revis${reviewSummary.dueToday !== 1 ? 'ões' : 'ão'} para hoje`
+                        }
+                      </H3>
+                      <Muted className="text-sm">
+                        {reviewSummary.totalDue > 0 && (
+                          <>
+                            {reviewSummary.dueToday > 0 && `${reviewSummary.dueToday} hoje`}
+                            {reviewSummary.dueToday > 0 && reviewSummary.overdue > 0 && ' • '}
+                            {reviewSummary.overdue > 0 && `${reviewSummary.overdue} atrasada${reviewSummary.overdue > 1 ? 's' : ''}`}
+                            {reviewSummary.dueThisWeek > 0 && ` • ${reviewSummary.dueThisWeek} esta semana`}
+                          </>
+                        )}
+                      </Muted>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => setLocation("/review")}
+                    size="lg"
+                    className={`${
+                      reviewSummary.overdue > 0
+                        ? 'bg-red-500 hover:bg-red-600 text-white'
+                        : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                    } shadow-md`}
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Iniciar Revisão
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Formulário de Criação - Melhorado */}

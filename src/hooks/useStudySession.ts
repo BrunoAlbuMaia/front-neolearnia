@@ -40,6 +40,14 @@ export function useStudySession(flashcardSetId?: string, totalCards?: number) {
   const recordReview = useMutation({
     mutationFn: (payload: RecordReviewPayload) =>
       studyApi.recordCardReview(payload),
+    onSuccess: () => {
+      // Invalidar queries relacionadas após revisão
+      queryClient.invalidateQueries({ queryKey: ['reviews-today'] });
+      queryClient.invalidateQueries({ queryKey: ['reviews-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['flashcards', 'recommended'] });
+      queryClient.invalidateQueries({ queryKey: ['user', 'gamification'] });
+    },
   });
 
   useEffect(() => {

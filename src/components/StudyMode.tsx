@@ -249,36 +249,59 @@ export default function StudyMode({ flashcards, onBack }: StudyModeProps) {
 
               <div className="flex flex-col items-center justify-center gap-4">
                 {isFlipped && (
-                  <div className="flex flex-wrap justify-center items-center gap-2">
-                    <span className="text-sm font-medium text-foreground mr-2">Como foi?</span>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      disabled={!sessionId || isCreatingSession || isRecordingReview}
-                      onClick={() => handleDifficulty('difficult')}
-                      data-testid="button-difficult"
-                    >
-                      <X className="mr-1 h-3 w-3" /> Difícil
-                    </Button>
-                    <Button
-                      className="bg-amber-500 text-white hover:bg-amber-600 disabled:bg-gray-400 disabled:hover:bg-gray-400"
-                      size="sm"
-                      disabled={!sessionId || isCreatingSession || isRecordingReview}
-                      onClick={() => handleDifficulty('medium')}
-                      data-testid="button-medium"
-                    >
-                      <Minus className="mr-1 h-3 w-3" /> Médio
-                    </Button>
-                    <Button
-                      className="bg-emerald-500 text-white hover:bg-emerald-600 disabled:bg-gray-400 disabled:hover:bg-gray-400"
-                      size="sm"
-                      disabled={!sessionId || isCreatingSession || isRecordingReview}
-                      onClick={() => handleDifficulty('easy')}
-                      data-testid="button-easy"
-                    >
-                      <Check className="mr-1 h-3 w-3" /> Fácil
-                    </Button>
-                  </div>
+                  <TooltipProvider>
+                    <div className="flex flex-wrap justify-center items-center gap-2">
+                      <span className="text-sm font-medium text-foreground mr-2">Como foi?</span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={!sessionId || isCreatingSession || isRecordingReview}
+                            onClick={() => handleDifficulty('difficult')}
+                            data-testid="button-difficult"
+                          >
+                            <X className="mr-1 h-3 w-3" /> Difícil
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Não lembrei bem. Vou revisar amanhã.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            className="bg-amber-500 text-white hover:bg-amber-600 disabled:bg-gray-400 disabled:hover:bg-gray-400"
+                            size="sm"
+                            disabled={!sessionId || isCreatingSession || isRecordingReview}
+                            onClick={() => handleDifficulty('medium')}
+                            data-testid="button-medium"
+                          >
+                            <Minus className="mr-1 h-3 w-3" /> Médio
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Lembrei com dificuldade. Vou revisar em alguns dias.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            className="bg-emerald-500 text-white hover:bg-emerald-600 disabled:bg-gray-400 disabled:hover:bg-gray-400"
+                            size="sm"
+                            disabled={!sessionId || isCreatingSession || isRecordingReview}
+                            onClick={() => handleDifficulty('easy')}
+                            data-testid="button-easy"
+                          >
+                            <Check className="mr-1 h-3 w-3" /> Fácil
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Lembrei facilmente! Próxima revisão em mais tempo.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </TooltipProvider>
                 )}
 
                 <div className="flex items-center space-x-3">
