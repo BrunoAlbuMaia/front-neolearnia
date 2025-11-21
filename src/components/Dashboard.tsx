@@ -14,6 +14,7 @@ import { ColorPicker } from "./ui/color-picker";
 import { Wand2, Loader2, Plus, Sparkles, Palette, HelpCircle, CheckCircle2, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SkeletonCard } from "./ui/skeleton-card";
+import { H2, H3, H4, Lead, Body, Small, Muted } from "./ui/typography";
 
 // Lazy load do componente Decks para melhor performance
 const Decks = lazy(() => import('./Decks/Decks'));
@@ -174,7 +175,7 @@ export default function Dashboard({
         </DialogContent>
       </Dialog>
 
-      <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8">
+      <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
         {/* Header - Design Limpo e Profissional */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -182,12 +183,12 @@ export default function Dashboard({
           className="relative overflow-hidden rounded-3xl bg-card border border-border p-8 md:p-10 shadow-lg"
         >
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
+            <H2 className="mb-2">
               Bem-vindo de volta! 👋
-            </h2>
-            <p className="text-base md:text-lg text-muted-foreground font-medium">
+            </H2>
+            <Lead className="font-medium">
               Continue de onde parou ou crie novos decks de estudo
-            </p>
+            </Lead>
           </div>
         </motion.div>
 
@@ -199,10 +200,7 @@ export default function Dashboard({
             transition={{ delay: 0.1 }}
             className="space-y-4"
           >
-            <Card className="shadow-2xl border-2 border-primary/20 hover:border-primary/40 hover-lift transition-all duration-300 relative overflow-hidden bg-gradient-to-br from-card via-card to-primary/5">
-              {/* Efeito de brilho sutil */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl opacity-50" />
-              
+            <Card className="shadow-md border border-border hover:shadow-lg transition-shadow">
               {/* Overlay de loading durante geração */}
               <AnimatePresence>
                 {isGenerating && (
@@ -213,29 +211,22 @@ export default function Dashboard({
                     className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center rounded-xl z-10"
                   >
                     <div className="text-center">
-                      <div className="relative">
-                        <Loader2 className="h-10 w-10 animate-spin mx-auto mb-3 text-primary" />
-                        <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl" />
-                      </div>
-                      <p className="text-base font-semibold text-foreground">Gerando {cardType === 'quiz' ? 'quiz' : 'flashcards'}...</p>
-                      <p className="text-sm text-muted-foreground mt-2">Isso pode levar alguns segundos</p>
+                      <Loader2 className="h-10 w-10 animate-spin mx-auto mb-3 text-primary" />
+                      <Body className="font-semibold">Gerando {cardType === 'quiz' ? 'quiz' : 'flashcards'}...</Body>
+                      <Small className="mt-2 block">Isso pode levar alguns segundos</Small>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              <CardHeader className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/5 border-b border-primary/20 relative overflow-hidden">
-                {/* Efeito de gradiente animado no header */}
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 opacity-50" />
-                <div className="relative z-10">
-                  <CardTitle className="flex items-center text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                    <Sparkles className="text-primary mr-2 h-6 w-6 drop-shadow-sm" />
-                    Criar Novos Flashcards
-                  </CardTitle>
-                  <CardDescription className="text-sm md:text-base mt-2 text-muted-foreground">
-                    Cole seu conteúdo e deixe a IA criar flashcards personalizados para você
-                  </CardDescription>
-                </div>
+              <CardHeader className="border-b border-border">
+                <CardTitle className="flex items-center">
+                  <Sparkles className="text-primary mr-2 h-5 w-5" />
+                  <H3>Criar Novos Flashcards</H3>
+                </CardTitle>
+                <CardDescription className="mt-2">
+                  <Muted>Cole seu conteúdo e deixe a IA criar flashcards personalizados para você</Muted>
+                </CardDescription>
               </CardHeader>
               
               <CardContent className="space-y-5 pt-6 relative">
@@ -315,18 +306,15 @@ export default function Dashboard({
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="space-y-4 pt-4 border-t"
+                      className="space-y-4 pt-4 border-t border-border"
                     >
                     {/* Seletor de Tipo de Flashcard - Mais Vibrante */}
-                    <div className="p-5 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5 rounded-xl border-2 border-primary/20 shadow-lg relative overflow-hidden">
-                      {/* Efeito de brilho de fundo */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 opacity-30" />
-                      
-                      <div className="relative z-10 flex items-center gap-2 mb-4">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent">
-                          <Sparkles className="h-4 w-4 text-white" />
+                    <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="p-1.5 rounded-md bg-primary">
+                          <Sparkles className="h-4 w-4 text-primary-foreground" />
                         </div>
-                        <h3 className="text-sm font-bold text-foreground">Tipo de Conteúdo</h3>
+                        <H4 className="text-base">Tipo de Conteúdo</H4>
                       </div>
                       <div className="relative z-10 grid grid-cols-2 gap-3">
                         {/* Card Padrão */}
@@ -349,37 +337,24 @@ export default function Dashboard({
                               : 'border-border/50 bg-card hover:border-primary/60 hover:bg-gradient-to-br hover:from-primary/5 hover:to-transparent hover:shadow-md'
                           }`}
                         >
-                          {cardType === 'standard' && (
-                            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
-                          )}
-                          <div className="relative z-10 flex items-start gap-3">
-                            <div className={`p-2.5 rounded-lg transition-all ${
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-md transition-all ${
                               cardType === 'standard'
-                                ? 'bg-gradient-to-br from-primary to-primary/80 text-white shadow-md'
+                                ? 'bg-primary text-primary-foreground'
                                 : 'bg-muted text-muted-foreground'
                             }`}>
-                              <HelpCircle className="h-5 w-5" />
+                              <HelpCircle className="h-4 w-4" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className={`font-bold text-sm mb-1 ${
+                              <h4 className={`font-semibold text-sm mb-1 ${
                                 cardType === 'standard' ? 'text-primary' : 'text-foreground'
                               }`}>
                                 Flashcard
                               </h4>
-                              <p className="text-xs text-muted-foreground leading-relaxed">
-                                Pergunta e resposta tradicional
-                              </p>
+                              <Small>Pergunta e resposta tradicional</Small>
                             </div>
                             {cardType === 'standard' && (
-                              <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="absolute top-2 right-2"
-                              >
-                                <div className="p-1 rounded-full bg-primary text-white">
-                                  <CheckCircle2 className="h-4 w-4" />
-                                </div>
-                              </motion.div>
+                              <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                             )}
                           </div>
                         </motion.button>
@@ -398,74 +373,58 @@ export default function Dashboard({
                           }}
                           aria-pressed={cardType === 'quiz'}
                           aria-label="Selecionar flashcard tipo quiz"
-                          className={`relative p-5 rounded-xl border-2 transition-all duration-300 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 overflow-hidden ${
+                          className={`relative p-4 rounded-lg border transition-all duration-200 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
                             cardType === 'quiz'
-                              ? 'border-accent bg-gradient-to-br from-accent/20 to-accent/5 shadow-lg scale-[1.02] ring-2 ring-accent/30 glow-accent'
-                              : 'border-border/50 bg-card hover:border-accent/60 hover:bg-gradient-to-br hover:from-accent/5 hover:to-transparent hover:shadow-md'
+                              ? 'border-accent bg-accent/10 shadow-sm'
+                              : 'border-border bg-card hover:border-accent/50 hover:bg-accent/5'
                           }`}
                         >
-                          {cardType === 'quiz' && (
-                            <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent" />
-                          )}
-                          <div className="relative z-10 flex items-start gap-3">
-                            <div className={`p-2.5 rounded-lg transition-all ${
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-md transition-all ${
                               cardType === 'quiz'
-                                ? 'bg-gradient-to-br from-accent to-accent/80 text-white shadow-md'
+                                ? 'bg-accent text-accent-foreground'
                                 : 'bg-muted text-muted-foreground'
                             }`}>
-                              <CheckCircle2 className="h-5 w-5" />
+                              <CheckCircle2 className="h-4 w-4" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className={`font-bold text-sm mb-1 ${
+                              <h4 className={`font-semibold text-sm mb-1 ${
                                 cardType === 'quiz' ? 'text-accent' : 'text-foreground'
                               }`}>
                                 Quiz
                               </h4>
-                              <p className="text-xs text-muted-foreground leading-relaxed">
-                                Múltipla escolha (A, B, C, D)
-                              </p>
+                              <Small>Múltipla escolha (A, B, C, D)</Small>
                             </div>
                             {cardType === 'quiz' && (
-                              <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="absolute top-2 right-2"
-                              >
-                                <div className="p-1 rounded-full bg-accent text-white">
-                                  <CheckCircle2 className="h-4 w-4" />
-                                </div>
-                              </motion.div>
+                              <CheckCircle2 className="h-4 w-4 text-accent shrink-0 mt-0.5" />
                             )}
                           </div>
                         </motion.button>
                       </div>
                     </div>
 
-                    {/* Seletor de Cores - Mais Vibrante */}
-                    <div className="p-5 bg-gradient-to-br from-accent/10 via-primary/10 to-accent/5 rounded-xl border-2 border-accent/20 shadow-lg relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-primary/5 to-accent/5 opacity-30" />
-                      <div className="relative z-10 flex items-center gap-2 mb-4">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-accent to-primary">
-                          <Palette className="h-4 w-4 text-white" />
+                    {/* Seletor de Cores */}
+                    <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="p-1.5 rounded-md bg-primary">
+                          <Palette className="h-4 w-4 text-primary-foreground" />
                         </div>
-                        <h3 className="text-sm font-bold text-foreground">Personalização Visual</h3>
+                        <H4 className="text-base">Personalização Visual</H4>
                       </div>
-                      <div className="relative z-10">
-                        <ColorPicker
-                          value={selectedColor}
-                          onChange={setSelectedColor}
-                        />
-                      </div>
+                      <ColorPicker
+                        value={selectedColor}
+                        onChange={setSelectedColor}
+                      />
                     </div>
 
-                    {/* Seleção de Deck - Mais Vibrante */}
-                    <div className="p-5 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 rounded-xl border-2 border-primary/20 shadow-lg">
-                      <h3 className="text-sm font-bold mb-4 text-foreground flex items-center gap-2">
-                        <span className="p-1.5 rounded-lg bg-gradient-to-br from-primary to-accent">
-                          <BookOpen className="h-3.5 w-3.5 text-white" />
+                    {/* Seleção de Deck */}
+                    <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                      <H4 className="mb-3 flex items-center gap-2">
+                        <span className="p-1.5 rounded-md bg-primary">
+                          <BookOpen className="h-3.5 w-3.5 text-primary-foreground" />
                         </span>
                         Onde salvar os flashcards?
-                      </h3>
+                      </H4>
 
                     {!showNewDeckInput ? (
                       <>

@@ -20,6 +20,7 @@ import { DeckManager } from "../DeckManager";
 import { useDebounce } from "../../hooks/useDebounce";
 import { EmptyState } from "../ui/empty-state";
 import { SkeletonCard } from "../ui/skeleton-card";
+import { H3 } from "../ui/typography";
 
 interface DecksProps {
   onStartStudy?: (flashcards: Flashcard[]) => void; // Opcional para compatibilidade
@@ -203,11 +204,11 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
         <div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl opacity-50" />
         
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 md:p-6 relative z-10 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border-b border-primary/20">
-          <CardTitle className="flex items-center text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent mr-3">
-              <BookOpen className="text-white h-5 w-5 shrink-0" />
+          <CardTitle className="flex items-center">
+            <div className="p-2 rounded-lg bg-primary mr-3">
+              <BookOpen className="text-primary-foreground h-5 w-5 shrink-0" />
             </div>
-            Seus Decks
+            <H3>Seus Decks</H3>
           </CardTitle>
           <div className="flex items-center gap-2 flex-wrap">
             <Button
@@ -229,7 +230,7 @@ export default function Decks({ onStartStudy, onStartQuiz }: DecksProps) {
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4 p-4 md:p-6">
+        <CardContent className="space-y-4 p-6">
           {/* Barra de Pesquisa - Mais Vibrante */}
           {!isLoadingDecks && decks.length > 0 && (
             <div className="relative">
